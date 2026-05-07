@@ -1,0 +1,476 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
+import { FiFilter, FiRefreshCw, FiSliders, FiX, FiLoader } from "react-icons/fi";
+import { Button } from "../ui/button";
+import { ProductCard } from "../landing/product-card";
+
+type SortKey = "featured" | "price-asc" | "price-desc";
+
+const sortOptions: Array<{ label: string; value: SortKey }> = [
+  { label: "Featured", value: "featured" },
+  { label: "Price: Low to High", value: "price-asc" },
+  { label: "Price: High to Low", value: "price-desc" },
+];
+
+export function ShopPage() {
+  const searchParams = useSearchParams();
+  const categoryParam = searchParams.get("category");
+  const searchParam = searchParams.get("search");
+
+  // Dynamic DB states
+  const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Filter states
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("All");
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>("All");
+  const [maxPrice, setMaxPrice] = useState<number>(3000);
+  const [onlyOffers, setOnlyOffers] = useState(false);
+  const [topRatedOnly, setTopRatedOnly] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>("featured");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  // Load products and categories from PostgreSQL
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+        const [prodRes, catRes] = await Promise.all([
+          fetch(`${baseUrl}/products`),
+          fetch(`${baseUrl}/categories`),
+        ]);
+        const [prodJson, catJson] = await Promise.all([
+          prodRes.json(),
+          catRes.json(),
+        ]);
+
+        if (prodJson.success) {
+          setProducts(prodJson.data);
+          const prices = prodJson.data.flatMap((p: any) =>
+            (p.sizes || []).map((s: any) => Number(s.price))
+          );
+          if (prices.length > 0) {
+            setMaxPrice(Math.max(...prices));
+          }
+        }
+        if (catJson.success) {
+          setCategories(catJson.data.filter((c: any) => c.status === "Active"));
+        }
+      } catch (err) {
+        console.error("Failed to load live shop data from database:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  // Sync category parameter from Landing Page clicks
+  useEffect(() => {
+    if (categoryParam && categories.length > 0) {
+      const matched = categories.find(
+        (c) =>
+          c.id === categoryParam ||
+          c.slug === categoryParam ||
+          c.name.toLowerCase() === categoryParam.toLowerCase()
+      );
+      if (matched) {
+        setSelectedCategoryId(matched.id);
+        setSelectedSubcategory("All");
+      }
+    }
+  }, [categoryParam, categories]);
+
+  // Dynamic price limits
+  const priceValues = useMemo(() => {
+    const vals = products.flatMap((p) => (p.sizes || []).map((s: any) => Number(s.price)));
+    return vals.length > 0 ? vals : [0, 3000];
+  }, [products]);
+
+  const minAvailablePrice = useMemo(() => Math.min(...priceValues), [priceValues]);
+  const maxAvailablePrice = useMemo(() => Math.max(...priceValues), [priceValues]);
+
+  // Active parent category subcategories
+  const activeSubcategories = useMemo(() => {
+    const parent = categories.find((c) => c.id === selectedCategoryId);
+    return parent?.subcategories || [];
+  }, [categories, selectedCategoryId]);
+
+  // Filtered and Sorted products
+  const filteredProducts = useMemo(() => {
+    let items = products.filter((product) => {
+      const price = Number(product.sizes?.[0]?.price || 0);
+      const categoryMatch =
+        selectedCategoryId === "All" || product.categoryId === selectedCategoryId;
+      const subcategoryMatch =
+        selectedSubcategory === "All" || product.subcategory === selectedSubcategory;
+      const priceMatch = price <= maxPrice;
+      const offerMatch = !onlyOffers || Boolean(product.hasOffer);
+      const ratingMatch =
+        !topRatedOnly || Number(product.rating || 5.0) >= 4.5;
+      const searchMatch =
+        !searchParam ||
+        product.name.toLowerCase().includes(searchParam.toLowerCase()) ||
+        (product.description || "").toLowerCase().includes(searchParam.toLowerCase());
+
+      return categoryMatch && subcategoryMatch && priceMatch && offerMatch && ratingMatch && searchMatch;
+    });
+
+    // Sorting logic
+    if (sortKey === "price-asc") {
+      items = [...items].sort(
+        (a, b) => Number(a.sizes?.[0]?.price || 0) - Number(b.sizes?.[0]?.price || 0)
+      );
+    } else if (sortKey === "price-desc") {
+      items = [...items].sort(
+        (a, b) => Number(b.sizes?.[0]?.price || 0) - Number(a.sizes?.[0]?.price || 0)
+      );
+    }
+
+    return items;
+  }, [products, selectedCategoryId, selectedSubcategory, maxPrice, onlyOffers, topRatedOnly, sortKey, searchParam]);
+
+  const activeCategoryLabel = useMemo(() => {
+    if (selectedCategoryId === "All") return "All Categories";
+    const cat = categories.find((c) => c.id === selectedCategoryId);
+    const label = cat ? cat.name : "All Categories";
+    if (selectedSubcategory !== "All") {
+      return `${label} — ${selectedSubcategory}`;
+    }
+    return label;
+  }, [categories, selectedCategoryId, selectedSubcategory]);
+
+  const resetFilters = () => {
+    setSelectedCategoryId("All");
+    setSelectedSubcategory("All");
+    setMaxPrice(maxAvailablePrice);
+    setOnlyOffers(false);
+    setTopRatedOnly(false);
+    setSortKey("featured");
+  };
+
+  const closeFilters = () => setIsFilterOpen(false);
+
+  const filtersPanel = (
+    <>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="flex items-center gap-2 text-[11px] uppercase tracking-[0.3em] text-text-soft">
+            <FiFilter className="text-[14px]" />
+            Filters
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-9 px-3"
+          onClick={resetFilters}
+        >
+          <FiRefreshCw className="text-[14px]" />
+          Reset
+        </Button>
+      </div>
+
+      <div className="mt-5 space-y-6">
+        {/* Category Parent Filter */}
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.3em] text-text-soft">
+            Category
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCategoryId("All");
+                setSelectedSubcategory("All");
+              }}
+              className={[
+                "border px-3 py-2 text-xs uppercase tracking-[0.2em] transition-colors",
+                selectedCategoryId === "All"
+                  ? "border-accent bg-accent text-white"
+                  : "border-line bg-surface text-foreground hover:border-accent/40 hover:bg-surface-strong",
+              ].join(" ")}
+            >
+              All
+            </button>
+            {categories.map((category) => {
+              const active = selectedCategoryId === category.id;
+
+              return (
+                <button
+                  key={category.id}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => {
+                    setSelectedCategoryId(category.id);
+                    setSelectedSubcategory("All");
+                  }}
+                  className={[
+                    "border px-3 py-2 text-xs uppercase tracking-[0.2em] transition-colors",
+                    active
+                      ? "border-accent bg-accent text-white"
+                      : "border-line bg-surface text-foreground hover:border-accent/40 hover:bg-surface-strong",
+                  ].join(" ")}
+                >
+                  {category.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Dynamic Subcategory Nested Filter */}
+        {selectedCategoryId !== "All" && activeSubcategories.length > 0 && (
+          <div className="pt-4 border-t border-line/60">
+            <p className="text-[11px] uppercase tracking-[0.3em] text-text-soft">
+              Subcategory
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedSubcategory("All")}
+                className={[
+                  "border px-2.5 py-1.5 text-[10px] uppercase tracking-[0.18em] transition-colors",
+                  selectedSubcategory === "All"
+                    ? "border-accent bg-accent text-white"
+                    : "border-line bg-surface text-foreground hover:border-accent/40 hover:bg-surface-strong",
+                ].join(" ")}
+              >
+                All
+              </button>
+              {activeSubcategories.map((sub: string) => {
+                const active = selectedSubcategory === sub;
+
+                return (
+                  <button
+                    key={sub}
+                    type="button"
+                    onClick={() => setSelectedSubcategory(sub)}
+                    className={[
+                      "border px-2.5 py-1.5 text-[10px] uppercase tracking-[0.18em] transition-colors",
+                      active
+                        ? "border-accent bg-accent text-white"
+                        : "border-line bg-surface text-foreground hover:border-accent/40 hover:bg-surface-strong",
+                    ].join(" ")}
+                  >
+                    {sub}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Price Filter */}
+        <div>
+          <div className="flex items-center justify-between gap-3">
+            <p className="flex items-center gap-2 text-[11px] uppercase tracking-[0.3em] text-text-soft">
+              <FiSliders className="text-[14px]" />
+              Price range
+            </p>
+          </div>
+          <div className="mt-4">
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-text-soft">{minAvailablePrice}</span>
+              <input
+                type="range"
+                min={minAvailablePrice}
+                max={maxAvailablePrice}
+                value={maxPrice}
+                onChange={(event) => {
+                  setMaxPrice(Number(event.target.value));
+                }}
+                className="w-full accent-[color:var(--accent)]"
+              />
+              <span className="text-sm text-text-soft">{maxPrice}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Other Filters */}
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.3em] text-text-soft">
+            Other
+          </p>
+          <div className="mt-3 space-y-3">
+            <label className="flex items-center gap-3 text-sm text-foreground cursor-pointer">
+              <input
+                type="checkbox"
+                checked={onlyOffers}
+                onChange={(event) => setOnlyOffers(event.target.checked)}
+                className="h-4 w-4 accent-[color:var(--accent)] cursor-pointer"
+              />
+              Offer products only
+            </label>
+            <label className="flex items-center gap-3 text-sm text-foreground cursor-pointer">
+              <input
+                type="checkbox"
+                checked={topRatedOnly}
+                onChange={(event) => setTopRatedOnly(event.target.checked)}
+                className="h-4 w-4 accent-[color:var(--accent)] cursor-pointer"
+              />
+              Rating 4.5 and above
+            </label>
+            <label className="block text-sm text-foreground">
+              <span className="mb-2 block text-[11px] uppercase tracking-[0.3em] text-text-soft">
+                Sort by
+              </span>
+              <select
+                value={sortKey}
+                onChange={(event) => setSortKey(event.target.value as SortKey)}
+                className="w-full border border-line bg-surface px-3 py-3 text-sm text-foreground outline-none transition-colors focus:border-accent"
+              >
+                {sortOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-40 space-y-4">
+        <FiLoader className="animate-spin text-4xl text-accent" />
+        <p className="text-sm text-text-soft">Loading Elara shop...</p>
+      </div>
+    );
+  }
+
+  return (
+    <section className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
+      <div className="mb-12 mx-auto max-w-3xl text-center">
+        <h1 className="font-display text-4xl font-semibold tracking-[-0.03em] text-foreground sm:text-5xl">
+          Explore products by category.
+        </h1>
+      </div>
+
+      <div className="mb-4 flex items-center justify-between gap-3 lg:hidden">
+        <Button
+          variant="primary"
+          size="sm"
+          className="h-10 px-4"
+          onClick={() => setIsFilterOpen(true)}
+        >
+          <FiFilter className="text-[14px]" />
+          Filter
+        </Button>
+        <span className="text-xs uppercase tracking-[0.22em] text-text-soft">
+          {filteredProducts.length} items
+        </span>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+        <aside className="hidden h-fit border border-line bg-surface p-5 lg:block lg:sticky lg:top-6">
+          {filtersPanel}
+        </aside>
+
+        <AnimatePresence>
+          {isFilterOpen ? (
+            <motion.div
+              key="filter-drawer"
+              className="fixed inset-0 z-40 lg:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <motion.button
+                type="button"
+                aria-label="Close filters"
+                className="absolute inset-0 bg-black/30"
+                onClick={closeFilters}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              />
+              <motion.aside
+                className="absolute inset-y-0 left-0 z-50 w-[88vw] max-w-sm overflow-y-auto border-r border-line bg-surface p-5 shadow-[18px_0_40px_rgba(20,17,15,0.12)]"
+                initial={{ x: -24, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -24, opacity: 0 }}
+                transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <div className="mb-4 flex items-center justify-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 px-3"
+                    onClick={closeFilters}
+                  >
+                    <FiX className="text-[14px]" />
+                    Close
+                  </Button>
+                </div>
+                {filtersPanel}
+              </motion.aside>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+
+        <div className="space-y-5">
+          <div className="flex items-center justify-between gap-3 px-1">
+            <button
+              type="button"
+              onClick={selectedCategoryId === "All" ? undefined : resetFilters}
+              className={[
+                "inline-flex items-center gap-2 border px-3 py-2 text-xs uppercase tracking-[0.2em] transition-colors",
+                selectedCategoryId === "All"
+                  ? "border-line bg-surface text-foreground hover:border-accent/40 hover:bg-surface-strong"
+                  : "border-accent bg-accent text-white",
+              ].join(" ")}
+            >
+              <span>{activeCategoryLabel}</span>
+              {selectedCategoryId !== "All" ? (
+                <FiX className="text-[12px] text-white" />
+              ) : null}
+            </button>
+            <span className="shrink-0 text-xs uppercase tracking-[0.22em] text-text-soft">
+              {filteredProducts.length} items
+            </span>
+          </div>
+
+          {filteredProducts.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {filteredProducts.map((product) => (
+                <ProductCard
+                  key={product.id || product.slug}
+                  product={product}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="border border-line bg-surface px-6 py-12 text-center">
+              <p className="text-lg font-semibold text-foreground">
+                No products match these filters.
+              </p>
+              <p className="mt-2 text-sm leading-7 text-text-soft">
+                Try another category or loosen the price range to see more
+                items.
+              </p>
+              <Button
+                variant="primary"
+                size="sm"
+                className="mt-5 h-10 px-4"
+                onClick={resetFilters}
+              >
+                Reset filters
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
