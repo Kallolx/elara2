@@ -23,6 +23,7 @@ const navigationItems = [
   { href: "/admin", label: "Dashboard", icon: FiHome },
   { href: "/admin/categories", label: "Categories", icon: FiGrid },
   { href: "/admin/products", label: "Products", icon: FiPackage },
+  { href: "/admin/sourcing", label: "Koba Sourcing", icon: FiPlus },
   { href: "/admin/customers", label: "Customers", icon: FiUsers },
   { href: "/admin/orders", label: "Orders", icon: FiShoppingBag },
   { href: "/admin/analytics", label: "Analytics", icon: FiBarChart2 },

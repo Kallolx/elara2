@@ -60,6 +60,9 @@ export default function AdminProductsPage() {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/products/${id}`, {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("elara_token")}`,
+        },
       });
       const json = await res.json();
       if (json.success) {

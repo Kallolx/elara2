@@ -64,6 +64,7 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
   const [howToUseRows, setHowToUseRows] = useState<string[]>([]);
   const [reviewRows, setReviewRows] = useState<ReviewRow[]>([]);
   const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
+  const [imageUrlInput, setImageUrlInput] = useState("");
 
   const galleryInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -90,7 +91,13 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
           setProductId(prod.id);
           setSku(prod.sku);
           setName(prod.name);
-          setSlug(prod.slug || "");
+          setSlug(
+            prod.slug ||
+              prod.name
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/(^-|-$)+/g, ""),
+          );
           setRating(String(prod.rating));
           setReviewCount(String(prod.reviewCount));
           setCategoryId(prod.categoryId);
@@ -98,7 +105,13 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
           setShortDescription(prod.shortDescription || "");
           setDescription(prod.description || "");
           setIngredientsText(prod.ingredients ? prod.ingredients.join(", ") : "");
-          setGalleryUrls(prod.gallery || []);
+          if (prod.gallery && prod.gallery.length > 0) {
+            setGalleryUrls(prod.gallery);
+          } else if (prod.image) {
+            setGalleryUrls([prod.image]);
+          } else {
+            setGalleryUrls([]);
+          }
           setHowToUseRows(prod.howToUse && prod.howToUse.length > 0 ? prod.howToUse : [""]);
 
           // Parse Sizes
@@ -158,6 +171,9 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/uploads/multiple`, {
         method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("elara_token")}`,
+        },
         body: formData,
       });
 
@@ -225,7 +241,10 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/products/${productId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("elara_token")}`,
+        },
         body: JSON.stringify(payload),
       });
 
@@ -654,25 +673,49 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
                     </div>
                   )}
                 </div>
-                <div className="flex justify-end">
-                  <input
-                    ref={galleryInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleGalleryChange}
-                    className="hidden"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={uploading}
-                    onClick={() => galleryInputRef.current?.click()}
-                  >
-                    <FiPlus className="text-[14px]" />
-                    Upload images
-                  </Button>
+                <div className="flex justify-between items-center gap-4 flex-wrap border-t border-line pt-4 mt-2">
+                  <div className="flex items-center gap-2 grow max-w-md">
+                    <input
+                      type="text"
+                      placeholder="Paste Image URL directly (e.g. Koba image URL)"
+                      value={imageUrlInput}
+                      onChange={(e) => setImageUrlInput(e.target.value)}
+                      className="w-full border border-line bg-background px-3 py-2 text-xs text-foreground outline-none focus:border-accent"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (imageUrlInput.trim()) {
+                          setGalleryUrls((current) => [...current, imageUrlInput.trim()]);
+                          setImageUrlInput("");
+                        }
+                      }}
+                    >
+                      Add URL
+                    </Button>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <input
+                      ref={galleryInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleGalleryChange}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={uploading}
+                      onClick={() => galleryInputRef.current?.click()}
+                    >
+                      <FiPlus className="text-[14px]" />
+                      Upload files
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
