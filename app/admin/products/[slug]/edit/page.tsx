@@ -693,7 +693,7 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
                         }
                       }}
                     >
-                      Add URL
+                      URL
                     </Button>
                   </div>
                   <div className="flex justify-end gap-2">

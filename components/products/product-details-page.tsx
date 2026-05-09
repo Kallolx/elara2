@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { useCart } from "@/context/CartContext";
 import {
   FiArrowLeft,
   FiCheck,
@@ -29,6 +31,8 @@ const tabs: Array<{ id: DetailTab; label: string }> = [
 ];
 
 export function ProductDetailsPage({ product }: ProductDetailsPageProps) {
+  const router = useRouter();
+  const { addToCart } = useCart();
   const displaySizes = product.sizes || [];
   const [activeTab, setActiveTab] = useState<DetailTab>("details");
   const [selectedSize, setSelectedSize] = useState<any>(
@@ -77,16 +81,77 @@ export function ProductDetailsPage({ product }: ProductDetailsPageProps) {
     return product.category || "Uncategorized";
   }, [product.category]);
 
-  const relatedProducts = useMemo(
-    () =>
-      featuredProducts
-        .filter(
-          (item) =>
-            item.category === categoryName && item.slug !== product.slug,
-        )
-        .slice(0, 3),
-    [categoryName, product.slug],
-  );
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchRelatedProducts = async () => {
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+        const res = await fetch(`${baseUrl}/products`);
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          const getSlug = (p: any) => {
+            if (p.slug) return p.slug;
+            return String(p.name || "")
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, "-")
+              .replace(/(^-|-$)+/g, "");
+          };
+
+          const currentSlug = getSlug(product);
+
+          const currentCatId = typeof product.category === "object" && product.category !== null
+            ? (product.category.id || product.category._id)
+            : String(product.category || "");
+
+          const currentCatName = typeof product.category === "object" && product.category !== null
+            ? String(product.category.name || "").toLowerCase().trim()
+            : String(product.category || "").toLowerCase().trim();
+
+          const filtered = json.data.filter((item: any) => {
+            const itemSlug = getSlug(item);
+            const isSelf = 
+              itemSlug === currentSlug || 
+              (product.id && item.id && item.id === product.id) || 
+              (product._id && item._id && item._id === product._id);
+            if (isSelf) {
+              return false;
+            }
+
+            const itemCatId = typeof item.category === "object" && item.category !== null 
+              ? (item.category.id || item.category._id)
+              : String(item.category || "");
+
+            const itemCatName = typeof item.category === "object" && item.category !== null 
+              ? String(item.category.name || "").toLowerCase().trim()
+              : String(item.category || "").toLowerCase().trim();
+
+            const matchesId = currentCatId && itemCatId && currentCatId === itemCatId;
+            const matchesName = currentCatName && itemCatName && currentCatName === itemCatName;
+
+            return matchesId || matchesName;
+          });
+
+          if (filtered.length > 0) {
+            setRelatedProducts(filtered.slice(0, 4));
+          } else {
+            const anyProducts = json.data.filter((item: any) => {
+              const itemSlug = getSlug(item);
+              const isSelf = 
+                itemSlug === currentSlug || 
+                (product.id && item.id && item.id === product.id) || 
+                (product._id && item._id && item._id === product._id);
+              return !isSelf;
+            });
+            setRelatedProducts(anyProducts.slice(0, 4));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch related products from database:", err);
+      }
+    };
+    fetchRelatedProducts();
+  }, [categoryName, product.slug, product.name, product.category, product.id, product._id]);
 
   const buyNowHref = useMemo(() => {
     const subject = encodeURIComponent(`Buy now: ${product.name}`);
@@ -255,21 +320,38 @@ export function ProductDetailsPage({ product }: ProductDetailsPageProps) {
                 <Button
                   variant="primary"
                   size="md"
-                  className="h-14 w-full justify-center px-8 text-sm"
+                  className="h-14 w-full justify-center px-8 text-sm cursor-pointer"
                   type="button"
+                  onClick={() => {
+                    addToCart(product, {
+                      name: selectedSize.label || selectedSize.name || "150 ml",
+                      price: typeof selectedSize.price === "number"
+                        ? selectedSize.price
+                        : parseFloat(String(selectedSize.price || 0).replace(/[^0-9.]/g, "")) || 0,
+                    }, quantity);
+                  }}
                 >
                   <FiShoppingBag className="text-[15px]" />
                   Add to cart
                 </Button>
 
-                <ButtonLink
-                  href={buyNowHref}
+                <Button
                   variant="outline"
                   size="md"
-                  className="h-14 px-6 sm:justify-self-end"
+                  className="h-14 px-6 sm:justify-self-end cursor-pointer"
+                  type="button"
+                  onClick={() => {
+                    addToCart(product, {
+                      name: selectedSize.label || selectedSize.name || "150 ml",
+                      price: typeof selectedSize.price === "number"
+                        ? selectedSize.price
+                        : parseFloat(String(selectedSize.price || 0).replace(/[^0-9.]/g, "")) || 0,
+                    }, quantity);
+                    router.push("/checkout");
+                  }}
                 >
                   Buy now
-                </ButtonLink>
+                </Button>
               </div>
 
               <div className="flex flex-wrap gap-x-5 gap-y-2 text-[11px] text-text-soft sm:text-xs">

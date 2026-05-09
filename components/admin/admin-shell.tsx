@@ -16,17 +16,18 @@ import {
   FiUser,
   FiMenu,
   FiUsers,
+  FiInstagram,
 } from "react-icons/fi";
 import { ButtonLink } from "../ui/button";
 
 const navigationItems = [
-  { href: "/admin", label: "Dashboard", icon: FiHome },
+  { href: "/admin", label: "Home", icon: FiHome },
+  { href: "/admin/sourcing", label: "Koba Sourcing", icon: FiPlus },
+  { href: "/admin/orders", label: "Orders", icon: FiShoppingBag },
   { href: "/admin/categories", label: "Categories", icon: FiGrid },
   { href: "/admin/products", label: "Products", icon: FiPackage },
-  { href: "/admin/sourcing", label: "Koba Sourcing", icon: FiPlus },
   { href: "/admin/customers", label: "Customers", icon: FiUsers },
-  { href: "/admin/orders", label: "Orders", icon: FiShoppingBag },
-  { href: "/admin/analytics", label: "Analytics", icon: FiBarChart2 },
+  { href: "/admin/social", label: "Social Media", icon: FiInstagram },
   { href: "/admin/site", label: "Site", icon: FiSettings },
 ];
 
@@ -35,6 +36,45 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { user, loading, logout } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [hasUnseenOrders, setHasUnseenOrders] = useState(false);
+
+  useEffect(() => {
+    if (loading || !user || user.role !== "ADMIN") return;
+
+    const checkUnseenOrders = async () => {
+      try {
+        const token = localStorage.getItem("elara_token");
+        if (!token) return;
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+        const res = await fetch(`${baseUrl}/orders`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          const allOrders = json.data;
+          const seenOrdersStr = localStorage.getItem("elara_seen_orders");
+          const seenOrderIds: string[] = seenOrdersStr ? JSON.parse(seenOrdersStr) : [];
+
+          // If current pathname is on the admin orders page, mark all as seen
+          if (pathname === "/admin/orders") {
+            const currentIds = allOrders.map((o: any) => o.id);
+            localStorage.setItem("elara_seen_orders", JSON.stringify(currentIds));
+            setHasUnseenOrders(false);
+          } else {
+            // Check if there are any orders not present in the seen list
+            const unseen = allOrders.some((o: any) => !seenOrderIds.includes(o.id));
+            setHasUnseenOrders(unseen);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to check unseen admin orders:", err);
+      }
+    };
+
+    checkUnseenOrders();
+    const interval = setInterval(checkUnseenOrders, 15000);
+    return () => clearInterval(interval);
+  }, [pathname, loading, user]);
 
   useEffect(() => {
     if (!loading && (!user || user.role !== "ADMIN")) {
@@ -109,7 +149,12 @@ export function AdminShell({ children }: { children: ReactNode }) {
                   ].join(" ")}
                 >
                   <Icon className="text-[15px]" />
-                  {item.label}
+                  <span className="relative inline-flex items-center gap-1.5">
+                    {item.label}
+                    {item.label === "Orders" && hasUnseenOrders && (
+                      <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                    )}
+                  </span>
                 </Link>
               );
             })}

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { KeyboardEvent } from "react";
 import { FiPlus, FiShoppingCart, FiStar } from "react-icons/fi";
+import { useCart } from "@/context/CartContext";
 
 type ProductCardProps = {
   product: {
@@ -41,6 +42,7 @@ function getTitleSizeClass(name: string) {
 
 export function ProductCard({ product }: ProductCardProps) {
   const router = useRouter();
+  const { addToCart } = useCart();
 
   // Safely get base size price and oldPrice
   const baseSize = product.sizes?.[0] || { price: 0, oldPrice: null };
@@ -124,7 +126,7 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
       </div>
       <h3
-        className={`mt-2 font-medium tracking-[-0.04em] text-foreground ${getTitleSizeClass(product.name)}`}
+        className={`mt-2 font-medium text-foreground ${getTitleSizeClass(product.name)}`}
       >
         {product.name}
       </h3>
@@ -143,8 +145,14 @@ export function ProductCard({ product }: ProductCardProps) {
           <button
             type="button"
             aria-label={`Add ${product.name} to cart`}
-            onClick={(event) => event.stopPropagation()}
-            className="flex h-9 w-9 shrink-0 items-center justify-center bg-accent text-white transition-colors hover:bg-accent-deep"
+            onClick={(event) => {
+              event.stopPropagation();
+              addToCart(product, {
+                name: (baseSize as any).name || baseSize.label || "150 ml",
+                price: displayPrice,
+              });
+            }}
+            className="flex h-9 w-9 shrink-0 items-center justify-center bg-accent text-white transition-colors hover:bg-accent-deep cursor-pointer"
           >
             <FiPlus className="text-[18px]" />
           </button>

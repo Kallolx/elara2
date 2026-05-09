@@ -35,7 +35,7 @@ export default function ProductCard({
   offers = [],
 }: ProductCardProps) {
   const [currentImage, setCurrentImage] = useState(image);
-  const { addItem } = useCart();
+  const { addToCart } = useCart();
 
   // Sync currentImage when the product image prop changes
   React.useEffect(() => {
@@ -48,13 +48,19 @@ export default function ProductCard({
     console.log("Adding to cart:", name);
     const numericPrice = parseFloat(price.replace(/[^0-9.]/g, ""));
 
-    addItem({
-      id: code,
-      name,
-      price: numericPrice,
-      image,
-      category,
-    });
+    addToCart(
+      {
+        id: code,
+        sku: code,
+        name,
+        image,
+        category,
+      },
+      {
+        name: "150 ml",
+        price: numericPrice,
+      }
+    );
   };
 
   return (

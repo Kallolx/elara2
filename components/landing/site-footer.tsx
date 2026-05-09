@@ -28,20 +28,16 @@ export function SiteFooter() {
       <div className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-8 lg:px-10 lg:py-12">
         <div className="grid gap-8 lg:grid-cols-[1.2fr_repeat(3,minmax(0,0.7fr))]">
           <div className="max-w-sm">
-            {settings.logo ? (
-              <span className="relative block h-10 w-36 overflow-hidden">
-                <Image
-                  src={settings.logo}
-                  alt={settings.logoAlt}
-                  fill
-                  className="object-contain object-left"
-                  unoptimized
-                  sizes="144px"
-                />
-              </span>
-            ) : (
-              <p className="text-xl font-semibold tracking-[0.12em] text-foreground font-display">ELARA</p>
-            )}
+            <span className="relative block h-10 w-36 overflow-hidden">
+              <Image
+                src={settings.logo || "/logo.svg"}
+                alt={settings.logoAlt || "Elara"}
+                fill
+                className="object-contain object-left"
+                unoptimized
+                sizes="144px"
+              />
+            </span>
             <p className="mt-3 text-sm leading-7 text-text-soft">
               Minimal skincare with a warm, editorial feel. Built to keep the product story compact,
               clear, and easy to shop.

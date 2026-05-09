@@ -9,22 +9,43 @@ export function ProductsSection() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const loadFeaturedContent = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/products`);
-        const json = await res.json();
-        if (json.success) {
-          // Take the first 4 products as curated featured products
-          setProducts(json.data.slice(0, 4));
+        const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+        const [prodRes, settingsRes] = await Promise.all([
+          fetch(`${apiBase}/products`),
+          fetch(`${apiBase}/site-settings`),
+        ]);
+
+        const prodJson = await prodRes.json();
+        const settingsJson = await settingsRes.json();
+
+        let finalDisplayProducts = [];
+        
+        if (prodJson.success) {
+          const allProducts = prodJson.data || [];
+          const featuredIds = settingsJson.success ? (settingsJson.data.featuredProductIds || []) : [];
+
+          if (featuredIds.length > 0) {
+            // Filter & Map precisely to the custom selection order defined by Admin
+            finalDisplayProducts = featuredIds
+              .map((id: string) => allProducts.find((p: any) => p.id === id))
+              .filter(Boolean); // Strip out missing products just in case
+          } else {
+            // Ultimate fallback to default curated subset
+            finalDisplayProducts = allProducts.slice(0, 4);
+          }
         }
+        
+        setProducts(finalDisplayProducts);
       } catch (err) {
-        console.error("Failed to load products:", err);
+        console.error("Failed to hydrate featured products ecosystem:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
+    loadFeaturedContent();
   }, []);
 
   if (loading) {

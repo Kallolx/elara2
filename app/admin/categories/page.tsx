@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { FiEdit3, FiGrid, FiPlus, FiTrash2, FiLoader } from "react-icons/fi";
 import { ButtonLink } from "@/components/ui/button";
-import { categoryIcons } from "@/components/admin/categories-data";
+import { getCategoryIconPath } from "@/components/admin/categories-data";
 import Link from "next/link";
 
 interface Category {
@@ -47,8 +47,10 @@ export default function AdminCategoriesPage() {
       return;
     }
     try {
+      const token = localStorage.getItem("elara_token");
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/categories/${id}`, {
         method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
       });
       const json = await res.json();
       if (json.success) {
@@ -113,9 +115,7 @@ export default function AdminCategoriesPage() {
             {/* Mobile View */}
             <div className="space-y-3 p-5 md:hidden">
               {categories.map((category) => {
-                const Icon =
-                  categoryIcons.find((option) => option.name === category.icon)
-                    ?.icon ?? FiGrid;
+
 
                 return (
                   <article
@@ -124,8 +124,12 @@ export default function AdminCategoriesPage() {
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-start gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-line bg-surface text-foreground">
-                          <Icon className="text-[16px]" />
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-line bg-surface p-1 rounded-sm">
+                          <img 
+                            src={getCategoryIconPath(category.icon)} 
+                            alt="" 
+                            className="h-full w-full object-contain"
+                          />
                         </span>
                         <div>
                           <p className="text-base font-medium text-foreground">
@@ -181,9 +185,7 @@ export default function AdminCategoriesPage() {
                 </thead>
                 <tbody>
                   {categories.map((category) => {
-                    const Icon =
-                      categoryIcons.find((option) => option.name === category.icon)
-                        ?.icon ?? FiGrid;
+
 
                     return (
                       <tr
@@ -194,8 +196,12 @@ export default function AdminCategoriesPage() {
                           {category.name}
                         </td>
                         <td className="px-5 py-4 text-text-soft">
-                          <span className="inline-flex h-9 w-9 items-center justify-center border border-line bg-background text-foreground">
-                            <Icon className="text-[15px]" />
+                          <span className="inline-flex h-10 w-10 items-center justify-center border border-line bg-background p-1 rounded-sm shadow-sm">
+                            <img 
+                              src={getCategoryIconPath(category.icon)} 
+                              alt="" 
+                              className="h-full w-full object-contain"
+                            />
                           </span>
                         </td>
                         <td className="px-5 py-4 text-[12px] text-text-soft">

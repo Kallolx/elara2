@@ -3,6 +3,10 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Product, products as initialProducts } from "@/lib/data";
 
+export interface HeroBanner {
+  image: string;
+}
+
 export interface StoreSettings {
   logo: string;
   logoAlt: string;
@@ -12,11 +16,7 @@ export interface StoreSettings {
   heroTitle: string;
   heroPrimaryCtaLabel: string;
   heroPrimaryCtaHref: string;
-  promoProductId: string;
-  promoBadge: string;
-  promoTitle: string;
-  promoDescription: string;
-  promoEndsAt: string;
+  banners: HeroBanner[];
   categories: {
     id: string;
     name: string;
@@ -34,80 +34,19 @@ export interface StoreSettings {
 const defaultSettings: StoreSettings = {
   logo: "",
   logoAlt: "Elara",
-  heroMedia: "/products/cleanser.png",
-  heroMediaAlt: "Skincare bottles in warm light",
-  heroEyebrow: "Natural • Soft • Everyday Care",
-  heroTitle: "Creamy skincare for warm routines.",
-  heroPrimaryCtaLabel: "Explore products",
-  heroPrimaryCtaHref: "#shop",
-  promoProductId: "EL-CLN-VC-150",
-  promoBadge: "Limited time offer",
-  promoTitle: "Featured product offer",
-  promoDescription:
-    "Highlight one product on the landing page with a timed seasonal offer.",
-  promoEndsAt: "2026-05-12T23:59",
-  categories: [
-    {
-      id: "cat-1",
-      name: "Serums",
-      image: "/categories/serums.png",
-      subcategories: [
-        { id: "sub-1-1", name: "Vitamin C" },
-        { id: "sub-1-2", name: "Retinol" },
-        { id: "sub-1-3", name: "Hyaluronic Acid" },
-      ],
-    },
-    {
-      id: "cat-2",
-      name: "Moisturizers",
-      image: "/categories/moisturizers.png",
-      subcategories: [
-        { id: "sub-2-1", name: "Day Creams" },
-        { id: "sub-2-2", name: "Night Creams" },
-        { id: "sub-2-3", name: "Face Oils" },
-      ],
-    },
-    {
-      id: "cat-3",
-      name: "Cleansers",
-      image: "/categories/cleansers.png",
-      subcategories: [
-        { id: "sub-3-1", name: "Foam Cleansers" },
-        { id: "sub-3-2", name: "Oil Cleansers" },
-        { id: "sub-3-3", name: "Micellar Water" },
-      ],
-    },
-    {
-      id: "cat-4",
-      name: "Sunscreen",
-      image: "/categories/sunscreen.png",
-      subcategories: [
-        { id: "sub-4-1", name: "Mineral Sunscreen" },
-        { id: "sub-4-2", name: "Chemical Sunscreen" },
-      ],
-    },
-    {
-      id: "cat-5",
-      name: "Treatments",
-      image: "/categories/serums.png",
-      subcategories: [
-        { id: "sub-5-1", name: "Brightening" },
-        { id: "sub-5-2", name: "Eye Care" },
-        { id: "sub-5-3", name: "Exfoliators" },
-      ],
-    },
-  ],
-  featuredProductIds: [
-    "EL-CLN-VC-150",
-    "EL-CLN-DS-100",
-    "EL-MST-CI-50",
-    "EL-MST-DG-50",
-    "EL-SRM-LV-30",
-  ],
+  heroMedia: "",
+  heroMediaAlt: "",
+  heroEyebrow: "",
+  heroTitle: "",
+  heroPrimaryCtaLabel: "",
+  heroPrimaryCtaHref: "",
+  banners: [],
+  categories: [],
+  featuredProductIds: [],
   colors: {
-    primary: "#0f0f0f", // Dark primary (almost black)
-    secondary: "#5c5c5c", // Gray secondary
-    background: "#FDFBF7", // Warm off-white
+    primary: "#0f0f0f",
+    secondary: "#5c5c5c",
+    background: "#FDFBF7",
   },
 };
 
@@ -130,90 +69,58 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<StoreSettings>(defaultSettings);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load from localStorage on mount
+  // Load from database/API on mount
   useEffect(() => {
-    try {
-      const savedProducts = localStorage.getItem("elara-products");
-      const savedSettings = localStorage.getItem("elara-settings");
+    const loadData = async () => {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
-      if (savedProducts) {
-        const parsedProducts = JSON.parse(savedProducts);
-        const idMap: Record<string, string> = {
-          "EL-001": "EL-CLN-VC-150",
-          "EL-002": "EL-CLN-DS-100",
-          "EL-003": "EL-MST-CI-50",
-          "EL-004": "EL-MST-DG-50",
-          "EL-005": "EL-SRM-LV-30",
-          "EL-006": "EL-SRM-OR-30",
-          "EL-007": "EL-SUN-IS-50",
-          "EL-008": "EL-TRT-HE-15",
-        };
-
-        const migratedProducts = parsedProducts.map((p: any) => ({
-          ...p,
-          id: idMap[p.id] || p.id,
-          relatedProducts: p.relatedProducts?.map(
-            (relId: string) => idMap[relId] || relId,
-          ),
-        }));
-        setProducts(migratedProducts);
+      // 1. Fetch live products from DB
+      try {
+        const prodRes = await fetch(`${baseUrl}/products`);
+        const prodJson = await prodRes.json();
+        if (prodJson.success && prodJson.data.length > 0) {
+          const mapped = prodJson.data.map((p: any) => ({
+            id: p.id,
+            sku: p.sku,
+            name: p.name,
+            category: p.category?.name || "",
+            price: p.sizes?.[0]?.price || p.price || 0,
+            originalPrice: p.sizes?.[0]?.oldPrice || p.oldPrice || null,
+            image: p.image || "/products/cleanser.png",
+            gallery: p.gallery || [],
+            sizes: p.sizes?.map((s: any) => ({ name: s.label, price: s.price })) || [],
+            ingredients: p.ingredients || [],
+            howToUse: p.howToUse || [],
+            reviews: p.reviews?.map((r: any) => ({ author: r.author, rating: r.rating, text: r.text })) || [],
+            description: p.description || "",
+            shortDescription: p.shortDescription || "",
+          }));
+          setProducts(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to load products from database:", err);
       }
-      if (savedSettings) {
-        const parsed = JSON.parse(savedSettings);
-        // Ensure new categories from defaultSettings are added to saved settings
-        const mergedCategories = [...defaultSettings.categories];
-        if (parsed.categories) {
-          parsed.categories.forEach((cat: any) => {
-            const index = mergedCategories.findIndex((c) => c.id === cat.id);
-            if (index !== -1) {
-              mergedCategories[index] = cat;
-            } else {
-              mergedCategories.push(cat);
-            }
-          });
+
+      // 2. Fetch live settings from DB
+      try {
+        const settingsRes = await fetch(`${baseUrl}/site-settings`);
+        const settingsJson = await settingsRes.json();
+        if (settingsJson.success) {
+          setSettings((prev) => ({
+            ...prev,
+            ...settingsJson.data,
+            banners: settingsJson.data.banners || prev.banners || [],
+          }));
         }
-
-        // Migrate old IDs in settings
-        const idMap: Record<string, string> = {
-          "EL-001": "EL-CLN-VC-150",
-          "EL-002": "EL-CLN-DS-100",
-          "EL-003": "EL-MST-CI-50",
-          "EL-004": "EL-MST-DG-50",
-          "EL-005": "EL-SRM-LV-30",
-          "EL-006": "EL-SRM-OR-30",
-          "EL-007": "EL-SUN-IS-50",
-          "EL-008": "EL-TRT-HE-15",
-        };
-
-        if (parsed.promoProductId && idMap[parsed.promoProductId]) {
-          parsed.promoProductId = idMap[parsed.promoProductId];
-        }
-
-        if (parsed.featuredProductIds) {
-          parsed.featuredProductIds = parsed.featuredProductIds.map(
-            (id: string) => idMap[id] || id,
-          );
-        }
-
-        setSettings({
-          ...defaultSettings,
-          ...parsed,
-          categories: mergedCategories,
-          colors: { ...defaultSettings.colors, ...parsed.colors },
-        });
+      } catch (err) {
+        console.error("Failed to load settings from database:", err);
       }
-    } catch (e) {
-      console.error("Failed to load store data", e);
-    }
-    setIsLoaded(true);
+
+      setIsLoaded(true);
+    };
+
+    loadData();
   }, []);
-
-  // Save to localStorage when changed
-  useEffect(() => {
-    if (!isLoaded) return;
-    localStorage.setItem("elara-products", JSON.stringify(products));
-    localStorage.setItem("elara-settings", JSON.stringify(settings));
-  }, [products, settings, isLoaded]);
 
   const updateProduct = (updatedProduct: Product) => {
     setProducts((prev) =>
@@ -229,8 +136,29 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setProducts((prev) => prev.filter((p) => p.id !== id));
   };
 
-  const updateSettings = (newSettings: Partial<StoreSettings>) => {
-    setSettings((prev) => ({ ...prev, ...newSettings }));
+  const updateSettings = async (newSettings: Partial<StoreSettings>) => {
+    setSettings((prev) => {
+      const updated = { ...prev, ...newSettings };
+      return updated;
+    });
+
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+      const token = localStorage.getItem("elara_token");
+      await fetch(`${baseUrl}/site-settings`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ...settings,
+          ...newSettings,
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to save site settings to database:", err);
+    }
   };
 
   return (

@@ -1,41 +1,45 @@
-import {
-  FiActivity,
-  FiBriefcase,
-  FiCoffee,
-  FiDroplet,
-  FiFeather,
-  FiGrid,
-  FiHeart,
-  FiScissors,
-  FiShield,
-  FiStar,
-  FiSun,
-  FiZap,
-} from "react-icons/fi";
-
 export const categoryIcons = [
-  { name: "Droplet", icon: FiDroplet },
-  { name: "Sun", icon: FiSun },
-  { name: "Star", icon: FiStar },
-  { name: "Zap", icon: FiZap },
-  { name: "Heart", icon: FiHeart },
-  { name: "Shield", icon: FiShield },
-  { name: "Feather", icon: FiFeather },
-  { name: "Activity", icon: FiActivity },
-  { name: "Coffee", icon: FiCoffee },
-  { name: "Briefcase", icon: FiBriefcase },
-  { name: "Scissors", icon: FiScissors },
-  { name: "Grid", icon: FiGrid },
+  { name: "Cleanser", path: "/category/cleanser.png" },
+  { name: "Cream", path: "/category/cream.png" },
+  { name: "Facemask", path: "/category/facemask.png" },
+  { name: "Serum", path: "/category/serum.png" },
+  { name: "Sun Screen", path: "/category/sun-screen.png" },
+  { name: "Toner", path: "/category/toner.png" },
 ] as const;
 
-export type CategoryIconName = (typeof categoryIcons)[number]["name"];
+export type CategoryIconPath = (typeof categoryIcons)[number]["path"];
+export type CategoryIconName = string; // Support both path and legacy names for transition
+
+// Helper to derive image path from old names stored in DB or direct image path
+export const getCategoryIconPath = (icon: string) => {
+  if (!icon) return "/category/cream.png";
+  if (icon.startsWith("/")) return icon; // is already a path
+
+  // Legacy mapping for safety
+  const legacyMap: Record<string, string> = {
+    Droplet: "/category/cleanser.png",
+    Sun: "/category/sun-screen.png",
+    Zap: "/category/serum.png",
+    Heart: "/category/cream.png",
+    Star: "/category/toner.png",
+    Shield: "/category/facemask.png",
+    Feather: "/category/cleanser.png",
+    Activity: "/category/cream.png",
+    Coffee: "/category/toner.png",
+    Briefcase: "/category/facemask.png",
+    Scissors: "/category/facemask.png",
+    Grid: "/category/cream.png",
+  };
+
+  return legacyMap[icon] || "/category/cream.png";
+};
 
 export type AdminCategory = {
   name: string;
   slug: string;
   products: number;
   status: string;
-  icon: CategoryIconName;
+  icon: string;
   description: string;
 };
 

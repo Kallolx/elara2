@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FiGrid, FiLoader } from "react-icons/fi";
-import { categoryIcons } from "@/components/admin/categories-data";
+import { getCategoryIconPath } from "@/components/admin/categories-data";
 
 interface Category {
   id: string;
@@ -64,9 +63,9 @@ export function CategoriesSection() {
   }
 
   return (
-    <section id="categories" className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8 lg:px-10">
+    <section id="categories" className="mx-auto w-full max-w-7xl px-5 py-4 sm:px-8 lg:px-10 pb-8">
       <div className="mb-8 text-center">
-        <h2 className="mt-2 font-display text-3xl font-semibold tracking-[-0.03em] text-foreground sm:text-4xl">
+        <h2 className="mt-2 font-display text-2xl md:text-3xl font-semibold tracking-[-0.03em] text-foreground">
           Categories
         </h2>
       </div>
@@ -74,24 +73,22 @@ export function CategoriesSection() {
       {/* Centered Dynamic Row Layout - preserving original brand borders & colors */}
       <div className="flex flex-wrap justify-center gap-4">
         {categories.map((category) => {
-          const IconObj = categoryIcons.find((i) => i.name === category.icon);
-          const Icon = IconObj ? IconObj.icon : FiGrid;
-
           return (
             <a
               key={category.id}
               href={`/shop?category=${category.id}`}
-              className="group flex h-[130px] w-[150px] shrink-0 flex-col rounded-lg items-center justify-center border border-line bg-surface px-4 py-4 text-center transition-colors hover:bg-surface-strong"
+              className="group flex h-[140px] w-[150px] shrink-0 flex-col rounded-lg items-center justify-center border border-line bg-surface px-4 py-4 text-center transition-all hover:bg-surface-strong hover:-translate-y-0.5 duration-300"
               aria-label={`Browse ${category.name}`}
             >
-              <span className="flex items-center justify-center text-[28px] text-[#5e4b38] transition-colors group-hover:text-[#4f3d2d]">
-                <Icon />
+              <span className="flex items-center justify-center w-20 h-20 mb-1 transition-transform group-hover:scale-110 duration-300">
+                <img 
+                  src={getCategoryIconPath(category.icon)} 
+                  alt="" 
+                  className="w-full h-full object-contain"
+                />
               </span>
-              <span className="mt-3 text-[10px] uppercase tracking-[0.28em] text-foreground text-center truncate w-full px-1">
+              <span className="text-md font-medium text-foreground text-center truncate w-full px-1">
                 {category.name}
-              </span>
-              <span className="mt-1.5 text-[9px] uppercase tracking-[0.2em] text-text-soft">
-                {category.products} {category.products === 1 ? "Item" : "Items"}
               </span>
             </a>
           );

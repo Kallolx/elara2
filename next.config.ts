@@ -15,6 +15,14 @@ const nextConfig: NextConfig = {
         protocol: "http",
         hostname: "localhost",
       },
+      {
+        protocol: "https",
+        hostname: "www.kobainternational.com",
+      },
+      {
+        protocol: "https",
+        hostname: "kcbazar.com",
+      },
     ],
   },
 };

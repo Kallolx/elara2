@@ -7,7 +7,7 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import {
   categoryIcons,
   categoryStatusOptions,
-  type CategoryIconName,
+  getCategoryIconPath,
 } from "@/components/admin/categories-data";
 
 const initialForm = {
@@ -15,7 +15,7 @@ const initialForm = {
   slug: "",
   status: "Active",
   description: "",
-  icon: "Droplet" as CategoryIconName,
+  icon: "/category/cream.png",
 };
 
 export default function AdminCategoryCreatePage() {
@@ -25,10 +25,7 @@ export default function AdminCategoryCreatePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const SelectedIcon = useMemo(
-    () => categoryIcons.find((option) => option.name === formState.icon)?.icon ?? categoryIcons[0].icon,
-    [formState.icon],
-  );
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,9 +43,13 @@ export default function AdminCategoryCreatePage() {
         subcategories: subcategories.filter(Boolean),
       };
 
+      const token = localStorage.getItem("elara_token");
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/categories`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
         body: JSON.stringify(payload),
       });
 
@@ -143,23 +144,27 @@ export default function AdminCategoryCreatePage() {
             </label>
 
             <label className="block text-sm lg:col-span-2">
-              <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-text-soft">Icon</span>
-              <div className="flex items-center gap-3 border border-line bg-background px-4 py-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-line bg-surface text-foreground">
-                  <SelectedIcon className="text-[16px]" />
-                </span>
+              <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-text-soft">Category Icon</span>
+              <div className="flex items-center gap-4 border border-line bg-background px-4 py-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center bg-surface rounded-sm border border-line p-1.5 shadow-sm">
+                  <img 
+                    src={getCategoryIconPath(formState.icon)} 
+                    alt="Icon Preview" 
+                    className="h-full w-full object-contain"
+                  />
+                </div>
                 <select
                   value={formState.icon}
                   onChange={(event) =>
                     setFormState((current) => ({
                       ...current,
-                      icon: event.target.value as CategoryIconName,
+                      icon: event.target.value,
                     }))
                   }
-                  className="min-w-0 flex-1 bg-transparent text-foreground outline-none focus:border-accent"
+                  className="min-w-0 flex-1 bg-transparent text-foreground outline-none focus:border-accent h-10 cursor-pointer"
                 >
                   {categoryIcons.map((option) => (
-                    <option key={option.name} value={option.name}>
+                    <option key={option.path} value={option.path}>
                       {option.name}
                     </option>
                   ))}

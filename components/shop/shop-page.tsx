@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { FiFilter, FiRefreshCw, FiSliders, FiX, FiLoader } from "react-icons/fi";
 import { Button } from "../ui/button";
 import { ProductCard } from "../landing/product-card";
+import { getCategoryIconPath } from "@/components/admin/categories-data";
 
 type SortKey = "featured" | "price-asc" | "price-desc";
 
@@ -158,13 +159,10 @@ export function ShopPage() {
 
   const filtersPanel = (
     <>
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="flex items-center gap-2 text-[11px] uppercase tracking-[0.3em] text-text-soft">
-            <FiFilter className="text-[14px]" />
-            Filters
-          </p>
-        </div>
+      <div className="flex items-center justify-between pb-4 border-b border-line/50 mb-5">
+        <p className="text-sm font-semibold tracking-tight text-foreground">
+          Filters
+        </p>
         <Button
           variant="ghost"
           size="sm"
@@ -176,13 +174,13 @@ export function ShopPage() {
         </Button>
       </div>
 
-      <div className="mt-5 space-y-6">
-        {/* Category Parent Filter */}
+      <div className="space-y-7">
+        {/* Category Parent Filter - E-Commerce Vertical List with Icons */}
         <div>
-          <p className="text-[11px] uppercase tracking-[0.3em] text-text-soft">
-            Category
+          <p className="text-[11px] uppercase tracking-widest text-text-soft font-bold mb-3">
+            CATEGORIES
           </p>
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="flex flex-col gap-1.5">
             <button
               type="button"
               onClick={() => {
@@ -190,13 +188,16 @@ export function ShopPage() {
                 setSelectedSubcategory("All");
               }}
               className={[
-                "border px-3 py-2 text-xs uppercase tracking-[0.2em] transition-colors",
+                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-left",
                 selectedCategoryId === "All"
-                  ? "border-accent bg-accent text-white"
-                  : "border-line bg-surface text-foreground hover:border-accent/40 hover:bg-surface-strong",
+                  ? "bg-accent/10 text-accent"
+                  : "text-foreground/80 hover:bg-surface-strong hover:text-foreground",
               ].join(" ")}
             >
-              All
+              <div className="w-9 h-9 flex items-center justify-center shrink-0">
+                 <FiFilter className="text-lg" />
+              </div>
+              <span className="font-medium text-base">All Categories</span>
             </button>
             {categories.map((category) => {
               const active = selectedCategoryId === category.id;
@@ -211,13 +212,20 @@ export function ShopPage() {
                     setSelectedSubcategory("All");
                   }}
                   className={[
-                    "border px-3 py-2 text-xs uppercase tracking-[0.2em] transition-colors",
+                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-left",
                     active
-                      ? "border-accent bg-accent text-white"
-                      : "border-line bg-surface text-foreground hover:border-accent/40 hover:bg-surface-strong",
+                      ? "bg-accent/10 text-accent"
+                      : "text-foreground/80 hover:bg-surface-strong hover:text-foreground",
                   ].join(" ")}
                 >
-                  {category.name}
+                  <div className="w-9 h-9 flex items-center justify-center shrink-0">
+                    <img
+                      src={getCategoryIconPath(category.icon)}
+                      alt=""
+                      className="w-8 h-8 object-contain"
+                    />
+                  </div>
+                  <span className="truncate font-medium text-base">{category.name}</span>
                 </button>
               );
             })}
@@ -226,19 +234,19 @@ export function ShopPage() {
 
         {/* Dynamic Subcategory Nested Filter */}
         {selectedCategoryId !== "All" && activeSubcategories.length > 0 && (
-          <div className="pt-4 border-t border-line/60">
-            <p className="text-[11px] uppercase tracking-[0.3em] text-text-soft">
-              Subcategory
+          <div>
+            <p className="text-[11px] uppercase tracking-widest text-text-soft font-bold mb-3">
+              SUBCATEGORY
             </p>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               <button
                 type="button"
                 onClick={() => setSelectedSubcategory("All")}
                 className={[
-                  "border px-2.5 py-1.5 text-[10px] uppercase tracking-[0.18em] transition-colors",
+                  "px-3 py-1.5 rounded-full text-[11px] font-medium transition-all border",
                   selectedSubcategory === "All"
                     ? "border-accent bg-accent text-white"
-                    : "border-line bg-surface text-foreground hover:border-accent/40 hover:bg-surface-strong",
+                    : "border-line bg-transparent text-foreground hover:border-accent/40 hover:bg-surface-strong",
                 ].join(" ")}
               >
                 All
@@ -252,10 +260,10 @@ export function ShopPage() {
                     type="button"
                     onClick={() => setSelectedSubcategory(sub)}
                     className={[
-                      "border px-2.5 py-1.5 text-[10px] uppercase tracking-[0.18em] transition-colors",
+                      "px-3 py-1.5 rounded-full text-[11px] font-medium transition-all border",
                       active
                         ? "border-accent bg-accent text-white"
-                        : "border-line bg-surface text-foreground hover:border-accent/40 hover:bg-surface-strong",
+                        : "border-line bg-transparent text-foreground hover:border-accent/40 hover:bg-surface-strong",
                     ].join(" ")}
                   >
                     {sub}
@@ -268,12 +276,9 @@ export function ShopPage() {
 
         {/* Price Filter */}
         <div>
-          <div className="flex items-center justify-between gap-3">
-            <p className="flex items-center gap-2 text-[11px] uppercase tracking-[0.3em] text-text-soft">
-              <FiSliders className="text-[14px]" />
-              Price range
-            </p>
-          </div>
+          <p className="text-[11px] uppercase tracking-widest text-text-soft font-bold mb-3">
+            PRICE RANGE
+          </p>
           <div className="mt-4">
             <div className="flex items-center gap-3">
               <span className="text-sm text-text-soft">{minAvailablePrice}</span>
@@ -292,38 +297,17 @@ export function ShopPage() {
           </div>
         </div>
 
-        {/* Other Filters */}
+        {/* Sorting Selection */}
         <div>
-          <p className="text-[11px] uppercase tracking-[0.3em] text-text-soft">
-            Other
+          <p className="text-[11px] uppercase tracking-widest text-text-soft font-bold mb-3">
+            SORT BY
           </p>
-          <div className="mt-3 space-y-3">
-            <label className="flex items-center gap-3 text-sm text-foreground cursor-pointer">
-              <input
-                type="checkbox"
-                checked={onlyOffers}
-                onChange={(event) => setOnlyOffers(event.target.checked)}
-                className="h-4 w-4 accent-[color:var(--accent)] cursor-pointer"
-              />
-              Offer products only
-            </label>
-            <label className="flex items-center gap-3 text-sm text-foreground cursor-pointer">
-              <input
-                type="checkbox"
-                checked={topRatedOnly}
-                onChange={(event) => setTopRatedOnly(event.target.checked)}
-                className="h-4 w-4 accent-[color:var(--accent)] cursor-pointer"
-              />
-              Rating 4.5 and above
-            </label>
+          <div className="space-y-3">
             <label className="block text-sm text-foreground">
-              <span className="mb-2 block text-[11px] uppercase tracking-[0.3em] text-text-soft">
-                Sort by
-              </span>
               <select
                 value={sortKey}
                 onChange={(event) => setSortKey(event.target.value as SortKey)}
-                className="w-full border border-line bg-surface px-3 py-3 text-sm text-foreground outline-none transition-colors focus:border-accent"
+                className="w-full border border-line bg-surface rounded-lg px-3 py-3 text-sm text-foreground outline-none transition-colors focus:border-accent"
               >
                 {sortOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -355,23 +339,10 @@ export function ShopPage() {
         </h1>
       </div>
 
-      <div className="mb-4 flex items-center justify-between gap-3 lg:hidden">
-        <Button
-          variant="primary"
-          size="sm"
-          className="h-10 px-4"
-          onClick={() => setIsFilterOpen(true)}
-        >
-          <FiFilter className="text-[14px]" />
-          Filter
-        </Button>
-        <span className="text-xs uppercase tracking-[0.22em] text-text-soft">
-          {filteredProducts.length} items
-        </span>
-      </div>
 
-      <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
-        <aside className="hidden h-fit border border-line bg-surface p-5 lg:block lg:sticky lg:top-6">
+
+      <div className="grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="hidden h-fit border border-line/50 bg-surface rounded-2xl p-6 lg:block lg:sticky lg:top-6">
           {filtersPanel}
         </aside>
 
@@ -420,23 +391,34 @@ export function ShopPage() {
         </AnimatePresence>
 
         <div className="space-y-5">
-          <div className="flex items-center justify-between gap-3 px-1">
-            <button
-              type="button"
-              onClick={selectedCategoryId === "All" ? undefined : resetFilters}
-              className={[
-                "inline-flex items-center gap-2 border px-3 py-2 text-xs uppercase tracking-[0.2em] transition-colors",
-                selectedCategoryId === "All"
-                  ? "border-line bg-surface text-foreground hover:border-accent/40 hover:bg-surface-strong"
-                  : "border-accent bg-accent text-white",
-              ].join(" ")}
-            >
-              <span>{activeCategoryLabel}</span>
-              {selectedCategoryId !== "All" ? (
-                <FiX className="text-[12px] text-white" />
-              ) : null}
-            </button>
-            <span className="shrink-0 text-xs uppercase tracking-[0.22em] text-text-soft">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <Button
+                variant="primary"
+                size="sm"
+                className="h-9 px-3 lg:hidden"
+                onClick={() => setIsFilterOpen(true)}
+              >
+                <FiFilter className="text-[14px]" />
+                Filter
+              </Button>
+              <button
+                type="button"
+                onClick={selectedCategoryId === "All" ? undefined : resetFilters}
+                className={[
+                  "inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium transition-all h-9 rounded-full",
+                  selectedCategoryId === "All"
+                    ? "bg-surface-strong text-foreground/80"
+                    : "bg-accent text-white shadow-sm",
+                ].join(" ")}
+              >
+                <span>{activeCategoryLabel}</span>
+                {selectedCategoryId !== "All" ? (
+                  <FiX className="text-[12px]" />
+                ) : null}
+              </button>
+            </div>
+            <span className="hidden lg:block shrink-0 text-xs uppercase tracking-[0.22em] text-text-soft">
               {filteredProducts.length} items
             </span>
           </div>

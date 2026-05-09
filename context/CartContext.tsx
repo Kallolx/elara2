@@ -3,116 +3,133 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 export interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
+  product: {
+    id: string;
+    sku: string;
+    name: string;
+    image: string;
+  };
+  size: {
+    name: string;
+    price: number;
+  };
   quantity: number;
-  category: string;
-  freeDelivery?: boolean;
 }
 
 interface CartContextType {
-  cart: CartItem[];
-  addItem: (item: Omit<CartItem, "quantity">) => void;
-  removeItem: (id: string) => void;
-  updateQuantity: (id: string, delta: number) => void;
-  clearCart: () => void;
-  totalItems: number;
-  totalAmount: number;
+  cartItems: CartItem[];
   isCartOpen: boolean;
   setIsCartOpen: (isOpen: boolean) => void;
-  isMenuOpen: boolean;
-  setIsMenuOpen: (isOpen: boolean) => void;
-  isMobileMenuOpen: boolean;
-  setIsMobileMenuOpen: (isOpen: boolean) => void;
-  isAuthOpen: boolean;
-  setIsAuthOpen: (isOpen: boolean) => void;
+  addToCart: (product: any, size: { name: string; price: number }, quantity?: number) => void;
+  removeFromCart: (productId: string, sizeName: string) => void;
+  updateQuantity: (productId: string, sizeName: string, quantity: number) => void;
+  clearCart: () => void;
+  cartCount: number;
+  cartSubtotal: number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Sync with localStorage
-  /*
+  // Load from localStorage on mount (SSR safe)
   useEffect(() => {
-    const savedCart = localStorage.getItem("elara-cart");
-    if (savedCart) {
-      setCart(JSON.parse(savedCart));
+    try {
+      const saved = localStorage.getItem("elara-cart");
+      if (saved) {
+        setCartItems(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error("Failed to load cart from localStorage:", e);
     }
+    setIsInitialized(true);
   }, []);
 
+  // Save to localStorage when changed
   useEffect(() => {
-    localStorage.setItem("elara-cart", JSON.stringify(cart));
-  }, [cart]);
-  */
+    if (!isInitialized) return;
+    try {
+      localStorage.setItem("elara-cart", JSON.stringify(cartItems));
+    } catch (e) {
+      console.error("Failed to save cart to localStorage:", e);
+    }
+  }, [cartItems, isInitialized]);
 
-  const addItem = (item: Omit<CartItem, "quantity">) => {
-    console.log("addItem called with:", item);
-    setCart((prevCart) => {
-      const existingItem = prevCart.find((i) => i.id === item.id);
-      if (existingItem) {
-        console.log("Item exists, incrementing quantity");
-        return prevCart.map((i) =>
-          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i,
-        );
+  const addToCart = (product: any, size: { name: string; price: number }, quantity = 1) => {
+    setCartItems((prev) => {
+      const existingIdx = prev.findIndex(
+        (item) => item.product.id === product.id && item.size.name === size.name,
+      );
+
+      if (existingIdx !== -1) {
+        const updated = [...prev];
+        updated[existingIdx].quantity += quantity;
+        return updated;
       }
-      console.log("New item, adding to cart");
-      return [...prevCart, { ...item, quantity: 1 }];
+
+      const newItem: CartItem = {
+        product: {
+          id: product.id,
+          sku: product.sku || "",
+          name: product.name,
+          image: product.image || "/products/cleanser.png",
+        },
+        size: {
+          name: size.name,
+          price: size.price,
+        },
+        quantity,
+      };
+
+      return [newItem, ...prev];
     });
-    setIsCartOpen(true); // Open cart when item added
+
+    // Auto open cart drawer for premium responsive feedback
+    setIsCartOpen(true);
   };
 
-  const removeItem = (id: string) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== id));
-  };
-
-  const updateQuantity = (id: string, delta: number) => {
-    setCart((prevCart) =>
-      prevCart
-        .map((item) => {
-          if (item.id === id) {
-            const newQty = Math.max(0, item.quantity + delta);
-            return { ...item, quantity: newQty };
-          }
-          return item;
-        })
-        .filter((item) => item.quantity > 0),
+  const removeFromCart = (productId: string, sizeName: string) => {
+    setCartItems((prev) =>
+      prev.filter((item) => !(item.product.id === productId && item.size.name === sizeName)),
     );
   };
 
-  const clearCart = () => setCart([]);
+  const updateQuantity = (productId: string, sizeName: string, quantity: number) => {
+    if (quantity <= 0) {
+      removeFromCart(productId, sizeName);
+      return;
+    }
+    setCartItems((prev) =>
+      prev.map((item) =>
+        item.product.id === productId && item.size.name === sizeName
+          ? { ...item, quantity }
+          : item,
+      ),
+    );
+  };
 
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const totalAmount = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0,
-  );
+  const clearCart = () => {
+    setCartItems([]);
+  };
+
+  const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const cartSubtotal = cartItems.reduce((acc, item) => acc + item.size.price * item.quantity, 0);
 
   return (
     <CartContext.Provider
       value={{
-        cart,
-        addItem,
-        removeItem,
-        updateQuantity,
-        clearCart,
-        totalItems,
-        totalAmount,
+        cartItems,
         isCartOpen,
         setIsCartOpen,
-        isMenuOpen,
-        setIsMenuOpen,
-        isMobileMenuOpen,
-        setIsMobileMenuOpen,
-        isAuthOpen,
-        setIsAuthOpen,
+        addToCart,
+        removeFromCart,
+        updateQuantity,
+        clearCart,
+        cartCount,
+        cartSubtotal,
       }}
     >
       {children}
