@@ -11,6 +11,8 @@ export const metadata: Metadata = {
     "Browse Elara products with category filters, pricing controls, and compact shop navigation.",
 };
 
+import { Suspense } from "react";
+
 export default function ShopRoutePage() {
   return (
     <div className="min-h-screen text-foreground relative bg-background">
@@ -30,7 +32,9 @@ export default function ShopRoutePage() {
       <div className="relative z-10 flex flex-col min-h-screen">
         <SiteHeader />
         <main id="top" className="flex-grow">
-          <ShopPage />
+          <Suspense fallback={null}>
+            <ShopPage />
+          </Suspense>
         </main>
         <SiteFooter />
       </div>
