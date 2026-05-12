@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FiUser, FiMail, FiCalendar, FiShield, FiAlertTriangle, FiLoader, FiPhone, FiMapPin, FiLock, FiCheck } from "react-icons/fi";
+import { FiUser, FiMail, FiCalendar, FiShield, FiAlertTriangle, FiPhone, FiMapPin, FiLock, FiCheck } from "react-icons/fi";
+import { LogoLoader } from "@/components/ui/logo-loader";
 import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { useAuth } from "@/context/AuthContext";
@@ -155,7 +156,7 @@ export default function MyProfilePage() {
       <div className="min-h-screen flex flex-col bg-background text-foreground">
         <SiteHeader />
         <main className="flex-grow flex flex-col items-center justify-center space-y-4">
-          <FiLoader className="animate-spin text-accent text-3xl" />
+          <LogoLoader size="md" />
           <p className="text-sm text-text-soft uppercase tracking-wider font-semibold">Loading profile...</p>
         </main>
         <SiteFooter />

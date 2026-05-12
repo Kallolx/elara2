@@ -3,8 +3,11 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { KeyboardEvent } from "react";
-import { FiPlus, FiShoppingCart, FiStar } from "react-icons/fi";
+import { FiPlus, FiShoppingCart, FiStar, FiHeart } from "react-icons/fi";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
+import { HiOutlineShoppingBag, HiShoppingBag } from "react-icons/hi";
+import { MdLocalOffer } from "react-icons/md";
 
 type ProductCardProps = {
   product: {
@@ -17,6 +20,8 @@ type ProductCardProps = {
     reviewCount?: any;
     hasOffer?: boolean;
     category?: any;
+    isOutOfStock?: boolean;
+    offers?: any[];
     sizes: Array<{
       label: string;
       price: any;
@@ -30,51 +35,114 @@ function getTitleSizeClass(name: string) {
   const characterCount = name.length;
 
   if (wordCount >= 5 || characterCount >= 30) {
-    return "text-[1.05rem] sm:text-[1.15rem] leading-[1.08]";
+    return "text-[1.05rem] sm:text-lg leading-[1]";
   }
 
   if (wordCount >= 4 || characterCount >= 24) {
-    return "text-[1.15rem] sm:text-[1.25rem] leading-[1.06]";
+    return "text-[1.15rem] sm:text-lg leading-[1]";
   }
 
-  return "text-xl sm:text-[1.4rem] leading-[1.02]";
+  return "text-xl sm:text-[1.4rem] leading-[1]";
 }
 
 export function ProductCard({ product }: ProductCardProps) {
   const router = useRouter();
   const { addToCart } = useCart();
+  const { user, toggleWishlist, isAuthenticated } = useAuth();
 
   // Safely get base size price and oldPrice
   const baseSize = product.sizes?.[0] || { price: 0, oldPrice: null };
-  const displayPrice = typeof baseSize.price === "number"
-    ? baseSize.price
-    : parseFloat(String(baseSize.price || 0).replace(/[^0-9.]/g, "")) || 0;
+  const basePrice =
+    typeof baseSize.price === "number"
+      ? baseSize.price
+      : parseFloat(String(baseSize.price || 0).replace(/[^0-9.]/g, "")) || 0;
 
-  const displayOldPrice = baseSize.oldPrice !== null && baseSize.oldPrice !== undefined
-    ? (typeof baseSize.oldPrice === "number"
+  const baseOldPrice =
+    baseSize.oldPrice !== null && baseSize.oldPrice !== undefined
+      ? typeof baseSize.oldPrice === "number"
         ? baseSize.oldPrice
-        : parseFloat(String(baseSize.oldPrice).replace(/[^0-9.]/g, "")) || null)
-    : null;
+        : parseFloat(String(baseSize.oldPrice).replace(/[^0-9.]/g, "")) || null
+      : null;
+
+  let displayPrice = basePrice;
+  let displayOldPrice = baseOldPrice;
+  let discountPercentage =
+    displayOldPrice && displayOldPrice > displayPrice
+      ? Math.round(((displayOldPrice - displayPrice) / displayOldPrice) * 100)
+      : 0;
+  let isFlashSale = false;
+
+  if (product.offers && product.offers.length > 0) {
+    const activeOffer = product.offers.find((o: any) => {
+      if (o.status !== 'ACTIVE' || o.code) return false;
+      
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      
+      if (o.startDate) {
+        const start = new Date(o.startDate);
+        start.setHours(0, 0, 0, 0);
+        if (start > now) return false;
+      }
+      
+      if (o.endDate) {
+        const end = new Date(o.endDate);
+        end.setHours(0, 0, 0, 0);
+        if (end < now) return false;
+      }
+      
+      return true;
+    });
+    
+    if (activeOffer) {
+      isFlashSale = activeOffer.isFlashSale || false;
+      const originalPrice = baseOldPrice || basePrice;
+      displayOldPrice = originalPrice;
+      
+      if (activeOffer.discountType === 'PERCENTAGE') {
+        displayPrice = originalPrice - (originalPrice * (activeOffer.discountValue / 100));
+        discountPercentage = activeOffer.discountValue;
+      } else {
+        displayPrice = originalPrice - activeOffer.discountValue;
+        discountPercentage = Math.round(((originalPrice - displayPrice) / originalPrice) * 100);
+      }
+      
+      if (displayPrice < 0) displayPrice = 0;
+      displayPrice = Math.round(displayPrice); // Ensure clean numbers
+    }
+  }
 
   // Safely parse primary image src
-  const imageSrc = typeof product.image === "string"
-    ? product.image
-    : (product.image?.src || "/placeholder.jpg");
-  const imageAlt = typeof product.image === "string"
-    ? product.name
-    : (product.image?.alt || product.name);
+  const imageSrc =
+    typeof product.image === "string"
+      ? product.image
+      : product.image?.src || "/placeholder.jpg";
+  const imageAlt =
+    typeof product.image === "string"
+      ? product.name
+      : product.image?.alt || product.name;
 
   // Safely parse category name
-  const categoryName = typeof product.category === "object" && product.category !== null
-    ? product.category.name
-    : (product.category || "Uncategorized");
+  const categoryName =
+    typeof product.category === "object" && product.category !== null
+      ? product.category.name
+      : product.category || "Uncategorized";
+
+  // Safely parse brand name
+  const brandName =
+    typeof (product as any).brand === "object" &&
+    (product as any).brand !== null
+      ? (product as any).brand.name
+      : null;
 
   // Dynamic details page redirection
   const handleNavigate = () => {
-    const slug = product.slug || product.name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)+/g, "");
+    const slug =
+      product.slug ||
+      product.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)+/g, "");
     router.push(`/products/${slug}`);
   };
 
@@ -92,70 +160,127 @@ export function ProductCard({ product }: ProductCardProps) {
       aria-label={`Open ${product.name} details`}
       onClick={handleNavigate}
       onKeyDown={handleKeyDown}
-      className="group flex h-full cursor-pointer flex-col overflow-hidden border border-line bg-surface px-4 py-4 sm:px-5 sm:py-5"
+      className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border border-line bg-white px-4 py-4 sm:px-5 sm:py-5 transition-shadow hover:shadow-md"
     >
       <div className="relative rounded-lg overflow-hidden">
-        {product.hasOffer ? (
-          <span className="absolute left-4 top-4 z-20 bg-accent px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-white">
-            Offer
+        {discountPercentage > 0 ? (
+          <span className="absolute flex items-center gap-1 left-1 top-1 z-20 bg-black/5 px-2.5 py-1 text-sm text-accent rounded-full">
+            <MdLocalOffer className="w-4 h-4" />
+            {discountPercentage}% OFF
           </span>
         ) : null}
-        <div className="relative block">
+
+        {isFlashSale && !product.isOutOfStock && (
+          <span className="absolute left-1 top-8 z-20 flex items-center gap-1 bg-red-600/90 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white rounded-full shadow-sm">
+            Flash Sale
+          </span>
+        )}
+
+        {product.isOutOfStock && (
+          <span className="absolute left-1 top-1 z-20 bg-stone-800/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white backdrop-blur-sm border border-white/10 rounded-full">
+            Sold Out
+          </span>
+        )}
+
+        {/* Wishlist Toggle Action */}
+        <button
+          type="button"
+          onClick={async (e) => {
+            e.stopPropagation();
+            if (!isAuthenticated) {
+              router.push("/auth/signin");
+              return;
+            }
+            if (product.id) {
+              await toggleWishlist(product.id);
+            }
+          }}
+          className="absolute right-1 top-1 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-white/80 backdrop-blur-md transition-transform hover:scale-110 shadow-sm"
+          aria-label={
+            user?.wishlistIds?.includes(product.id || "")
+              ? "Remove from wishlist"
+              : "Add to wishlist"
+          }
+        >
+          <FiHeart
+            className={`text-[15px] transition-colors ${
+              user?.wishlistIds?.includes(product.id || "")
+                ? "fill-red-500 text-red-500"
+                : "text-text-soft hover:text-accent"
+            }`}
+          />
+        </button>
+
+        <div className="relative block bg-[#f9f9f9]">
           <div className="relative h-[300px] w-full overflow-hidden">
             <img
               src={imageSrc}
               alt={imageAlt}
-              className="absolute inset-0 h-full w-full object-cover transition-transform duration-500"
+              className={`absolute inset-0 h-full w-full object-cover transition-all duration-500 ${
+                product.isOutOfStock ? "grayscale opacity-70 group-hover:scale-105" : "group-hover:scale-105"
+              }`}
             />
           </div>
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#24160f]/70 via-[#24160f]/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex translate-y-full items-center justify-center gap-2 bg-[#3f2a1d]/95 px-4 py-4 text-sm font-semibold uppercase tracking-[0.1em] text-white backdrop-blur-[2px] transition-transform duration-300 ease-[0.22,1,0.36,1] group-hover:translate-y-0">
-            <FiShoppingCart className="text-[12px]" />
-            <span className="text-[12px]">Add to cart</span>
-          </div>
         </div>
       </div>
-      <div className="mt-4 flex items-center justify-between gap-3">
-        <p className="text-[11px] uppercase tracking-wider text-text-soft">
-          {categoryName}
-        </p>
-        <div className="flex items-center gap-2 text-[13px] text-text-soft">
-          <FiStar className="text-[15px] text-[#b38a3a]" fill="currentColor" aria-hidden="true" />
-          <span className="font-medium text-foreground">{product.rating || "5.0"}</span>
-          <span>({product.reviewCount || 0})</span>
+
+      {/* Content Body */}
+      <div className="flex flex-col flex-grow pt-4 pb-2">
+        {/* Minimal Review Count Top of Name */}
+        <div className="mb-2 font-medium flex items-center">
+          {(product.reviewCount || 0) > 0 ? (
+            <span className="text-sm text-green-600">
+              {product.reviewCount} {product.reviewCount === 1 ? 'Review' : 'Reviews'}
+            </span>
+          ) : (
+            <span className="text-sm text-green-600">
+              0 Reviews
+            </span>
+          )}
         </div>
+
+        <h3
+          className={`font-sans font-normal text-foreground mb-1.5 ${getTitleSizeClass(product.name)}`}
+        >
+          {product.name}
+        </h3>
       </div>
-      <h3
-        className={`mt-2 font-medium text-foreground ${getTitleSizeClass(product.name)}`}
-      >
-        {product.name}
-      </h3>
-      <div className="mt-auto pt-5">
-        <div className="flex items-end justify-between gap-3">
-          <div className="flex flex-wrap items-end gap-3">
-            <p className="text-2xl font-semibold text-foreground">
-              ৳ {displayPrice}
+
+      {/* Footer: Price and Cart */}
+      <div className="mt-auto pt-1">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <p className="text-2xl font-medium text-foreground">
+              ৳{displayPrice}
             </p>
             {displayOldPrice && (
-              <p className="text-sm text-text-soft line-through">
-                ৳ {displayOldPrice}
+              <p className="text-sm font-medium text-text-soft/60 line-through decoration-text-soft/40">
+                ৳{displayOldPrice}
               </p>
             )}
           </div>
-          <button
-            type="button"
-            aria-label={`Add ${product.name} to cart`}
-            onClick={(event) => {
-              event.stopPropagation();
-              addToCart(product, {
-                name: (baseSize as any).name || baseSize.label || "150 ml",
-                price: displayPrice,
-              });
-            }}
-            className="flex h-9 w-9 shrink-0 items-center justify-center bg-accent text-white transition-colors hover:bg-accent-deep cursor-pointer"
-          >
-            <FiPlus className="text-[18px]" />
-          </button>
+          
+          {product.isOutOfStock ? (
+            <div className="flex h-8 px-2.5 shrink-0 items-center justify-center bg-stone-100 text-stone-500 rounded-full border border-stone-200/60 cursor-not-allowed">
+              <span className="text-[9px] font-bold uppercase tracking-widest">Sold Out</span>
+            </div>
+          ) : (
+            <button
+              type="button"
+              aria-label={`Add ${product.name} to cart`}
+              onClick={(event) => {
+                event.stopPropagation();
+                addToCart(product, {
+                  name: (baseSize as any).name || baseSize.label || "150 ml",
+                  price: displayPrice,
+                  oldPrice: displayOldPrice,
+                });
+              }}
+              className="flex h-9 w-9 shrink-0 items-center justify-center bg-accent text-white transition-all hover:bg-accent-deep cursor-pointer rounded-full shadow-sm"
+            >
+              <HiOutlineShoppingBag className="text-[16px]" />
+            </button>
+          )}
         </div>
       </div>
     </article>

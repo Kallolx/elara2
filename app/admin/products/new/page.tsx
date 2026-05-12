@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiArrowLeft, FiPlus, FiSave, FiX, FiLoader } from "react-icons/fi";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { BrandSelect } from "@/components/admin/brand-select";
 
 const sizeUnits = ["ml", "g", "pcs"];
 
@@ -28,12 +29,22 @@ interface Category {
   subcategories?: string[];
 }
 
+interface Brand {
+  id: string;
+  name: string;
+  logo?: string | null;
+}
+
 export default function AdminProductCreatePage() {
   const router = useRouter();
   
   // Dynamic Categories from Backend
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
+
+  // Dynamic Brands from Backend
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [brandsLoading, setBrandsLoading] = useState(true);
 
   // Form Field States
   const [sku, setSku] = useState("");
@@ -42,6 +53,7 @@ export default function AdminProductCreatePage() {
   const [rating, setRating] = useState("5.0");
   const [reviewCount, setReviewCount] = useState("0");
   const [categoryId, setCategoryId] = useState("");
+  const [brandId, setBrandId] = useState("");
   const [subcategory, setSubcategory] = useState("");
   const [shortDescription, setShortDescription] = useState("");
   const [description, setDescription] = useState("");
@@ -67,10 +79,13 @@ export default function AdminProductCreatePage() {
   const galleryInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    const loadCategories = async () => {
+    const loadInitialData = async () => {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+      
+      // Load Categories
       try {
         setCategoriesLoading(true);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/categories`);
+        const res = await fetch(`${apiBase}/categories`);
         const json = await res.json();
         if (json.success) {
           setCategories(json.data);
@@ -83,8 +98,23 @@ export default function AdminProductCreatePage() {
       } finally {
         setCategoriesLoading(false);
       }
+
+      // Load Brands
+      try {
+        setBrandsLoading(true);
+        const res = await fetch(`${apiBase}/brands`);
+        const json = await res.json();
+        if (json.success) {
+          setBrands(json.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch brands:", err);
+      } finally {
+        setBrandsLoading(false);
+      }
     };
-    loadCategories();
+    
+    loadInitialData();
   }, []);
 
   // Multi-image local upload using Multer backend
@@ -156,6 +186,7 @@ export default function AdminProductCreatePage() {
         sku,
         name,
         categoryId,
+        brandId: brandId || undefined,
         subcategory: subcategory || undefined,
         hasOffer: parsedSizes.some((s) => s.oldPrice && s.oldPrice > s.price),
         rating: Number(rating),
@@ -303,6 +334,16 @@ export default function AdminProductCreatePage() {
                   ))}
                 </select>
               )}
+            </label>
+
+            <label className="block text-sm">
+              <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-text-soft">Brand (Optional)</span>
+              <BrandSelect
+                brands={brands}
+                value={brandId}
+                onChange={setBrandId}
+                loading={brandsLoading}
+              />
             </label>
 
             <label className="block text-sm">

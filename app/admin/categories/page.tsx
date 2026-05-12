@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FiEdit3, FiGrid, FiPlus, FiTrash2, FiLoader } from "react-icons/fi";
+import { FiEdit3, FiGrid, FiPlus, FiTrash2 } from "react-icons/fi";
+import { LogoLoader } from "@/components/ui/logo-loader";
 import { ButtonLink } from "@/components/ui/button";
 import { getCategoryIconPath } from "@/components/admin/categories-data";
 import Link from "next/link";
@@ -80,7 +81,7 @@ export default function AdminCategoriesPage() {
 
         {loading ? (
           <div className="flex flex-col items-center justify-center p-20 space-y-4">
-            <FiLoader className="animate-spin text-3xl text-accent" />
+            <LogoLoader size="lg" />
             <p className="text-sm text-text-soft">Loading categories from database...</p>
           </div>
         ) : error ? (

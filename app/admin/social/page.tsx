@@ -11,6 +11,7 @@ import {
   FiVideo, 
   FiPlus 
 } from "react-icons/fi";
+import { LogoLoader } from "@/components/ui/logo-loader";
 import { Button } from "@/components/ui/button";
 
 interface SocialPost {
@@ -300,7 +301,7 @@ export default function AdminSocialPage() {
 
           {loading ? (
             <div className="py-20 text-center">
-              <FiLoader className="animate-spin text-3xl text-accent mx-auto mb-4" />
+              <LogoLoader size="lg" className="mx-auto mb-4" />
               <p className="text-sm text-text-soft">Hydrating your visual matrix...</p>
             </div>
           ) : posts.length === 0 ? (

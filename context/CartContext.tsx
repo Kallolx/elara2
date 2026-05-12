@@ -12,6 +12,7 @@ export interface CartItem {
   size: {
     name: string;
     price: number;
+    oldPrice?: number | null;
   };
   quantity: number;
 }
@@ -20,7 +21,7 @@ interface CartContextType {
   cartItems: CartItem[];
   isCartOpen: boolean;
   setIsCartOpen: (isOpen: boolean) => void;
-  addToCart: (product: any, size: { name: string; price: number }, quantity?: number) => void;
+  addToCart: (product: any, size: { name: string; price: number; oldPrice?: number | null }, quantity?: number, shouldOpen?: boolean) => void;
   removeFromCart: (productId: string, sizeName: string) => void;
   updateQuantity: (productId: string, sizeName: string, quantity: number) => void;
   clearCart: () => void;
@@ -58,7 +59,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [cartItems, isInitialized]);
 
-  const addToCart = (product: any, size: { name: string; price: number }, quantity = 1) => {
+  const addToCart = (product: any, size: { name: string; price: number; oldPrice?: number | null }, quantity = 1, shouldOpen = true) => {
     setCartItems((prev) => {
       const existingIdx = prev.findIndex(
         (item) => item.product.id === product.id && item.size.name === size.name,
@@ -67,6 +68,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (existingIdx !== -1) {
         const updated = [...prev];
         updated[existingIdx].quantity += quantity;
+        // Dynamic Schema Sync: Update existing line item's metadata with current context (e.g., injection of oldPrice)
+        updated[existingIdx].size = {
+          ...updated[existingIdx].size,
+          price: size.price,
+          oldPrice: size.oldPrice || null,
+        };
         return updated;
       }
 
@@ -80,6 +87,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         size: {
           name: size.name,
           price: size.price,
+          oldPrice: size.oldPrice || null,
         },
         quantity,
       };
@@ -87,8 +95,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return [newItem, ...prev];
     });
 
-    // Auto open cart drawer for premium responsive feedback
-    setIsCartOpen(true);
+    // Auto open cart drawer for premium responsive feedback if allowed
+    if (shouldOpen) {
+      setIsCartOpen(true);
+    }
   };
 
   const removeFromCart = (productId: string, sizeName: string) => {

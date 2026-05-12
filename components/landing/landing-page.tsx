@@ -4,6 +4,9 @@ import { ProductsSection } from "./products-section";
 import { SocialMediaSection } from "./social-media-section";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
+import { ShopByConcernSection } from "./shop-by-concern-section";
+
+import { PromoBannerSection } from "./promo-banner";
 
 export function LandingPage() {
   return (
@@ -34,7 +37,9 @@ export function LandingPage() {
         <main id="top" className="flex-grow">
           <HeroSection />
           <CategoriesSection />
+          <ShopByConcernSection />
           <ProductsSection />
+          <PromoBannerSection />
           <SocialMediaSection />
         </main>
         <SiteFooter />

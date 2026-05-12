@@ -14,6 +14,7 @@ import {
   FiX,
   FiChevronDown,
   FiMenu,
+  FiHeart,
 } from "react-icons/fi";
 import { useStore } from "@/context/StoreContext";
 import { useAuth } from "@/context/AuthContext";
@@ -107,10 +108,13 @@ export function SiteHeader() {
   };
 
   return (
-    <header className="border-b border-line bg-surface sticky top-0 z-50">
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-4 sm:px-8 lg:px-10">
-        {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-3">
+    <header className="bg-background border-b-1 border-line sticky top-0 z-50 flex flex-col">
+      
+      {/* SINGLE NAVIGATION ROW */}
+      <div className="mx-auto relative flex h-16 sm:h-20 w-full max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-10">
+        
+        {/* 1. Brand Logo (Pinned Left) */}
+        <Link href="/" className="flex items-center gap-3 shrink-0 relative z-10">
           <span className="relative h-9 w-28 overflow-hidden">
             <Image
               src={settings.logo || "/logo.svg"}
@@ -123,239 +127,163 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        {/* Navigation Links */}
-        <nav className="hidden items-center gap-7 text-[15px] font-medium text-foreground/80 lg:flex">
-          <Link
-            href="/shop"
-            className="flex items-center gap-2 hover:text-foreground transition-colors"
-          >
-            <img
-              src="/nav/shop.svg"
-              alt=""
-              className="w-[18px] h-[18px] opacity-80 group-hover:opacity-100"
-            />
-            Shop
-          </Link>
-
-          {/* Dynamic Category Hover Dropdown */}
-          <div className="relative group h-full flex items-center py-4 cursor-pointer -mr-2">
-            <div className="flex items-center gap-2 hover:text-foreground transition-colors">
+        {/* 2. DEAD ABSOLUTE CENTER: Shop and Large Search Bar ONLY */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden lg:flex items-center gap-6 z-0">
+          
+          {/* Clean Navigation: Just Shop */}
+          <nav className="flex items-center shrink-0">
+            <Link
+              href="/shop"
+              className="flex items-center gap-2 text-[15px] font-medium text-foreground hover:text-accent transition-colors whitespace-nowrap"
+            >
               <img
-                src="/nav/category.svg"
+                src="/nav/shop.svg"
                 alt=""
-                className="w-[18px] h-[18px] opacity-80"
+                className="w-[18px] h-[18px]"
               />
-              Categories
-              <FiChevronDown className="text-[13px] transition-transform duration-300 group-hover:rotate-180" />
-            </div>
+              Shop
+            </Link>
+          </nav>
 
-            {/* Populated Dense Grid Container */}
-            <div className="absolute top-[90%] left-1/2 -translate-x-1/2 mt-1 w-[420px] bg-surface border border-line p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 origin-top shadow-lg z-50 grid grid-cols-2 gap-1 rounded-lg">
-              {categories.length > 0 ? (
-                categories.map((cat) => (
-                  <Link
-                    key={cat.id}
-                    href={`/shop?category=${cat.id}`}
-                    className="group/cat flex items-center gap-3 p-2 hover:bg-background border border-transparent rounded-md hover:border-line/30 transition-all duration-200"
-                  >
-                    {/* Expanded Image with zero inner padding for maximum fill */}
-                    <div className="w-12 h-12 shrink-0 flex items-center justify-center bg-surface-strong/60 border border-line/20 rounded-md overflow-hidden p-0 transition-all duration-300 group-hover/cat:bg-accent/5">
-                      <img
-                        src={getCategoryIconPath(cat.icon)}
-                        alt=""
-                        className="w-full h-full object-contain p-1 transition-transform duration-300 group-hover/cat:scale-110"
-                      />
-                    </div>
-                    <div className="flex flex-col overflow-hidden min-w-0 gap-0.5">
-                      <span className="text-[15px] font-medium text-foreground leading-tight group-hover/cat:text-accent transition-colors truncate">
-                        {cat.name}
-                      </span>
-                      <span className="text-[11px] font-normal text-text-soft leading-tight truncate">
-                        {cat.description || "Curated items"}
-                      </span>
-                    </div>
-                  </Link>
-                ))
-              ) : (
-                <span className="col-span-2 text-center py-3 text-[9px] text-text-soft tracking-wider">
-                  Loading...
-                </span>
-              )}
-            </div>
-          </div>
-
-          <Link
-            href="/shop"
-            className="flex items-center gap-2 hover:text-foreground transition-colors"
-          >
-            <img
-              src="/nav/new.svg"
-              alt=""
-              className="w-[18px] h-[18px] opacity-80"
-            />
-            New Arrivals
-          </Link>
-          <Link
-            href="/shop"
-            className="flex items-center gap-2 hover:text-foreground transition-colors"
-          >
-            <img
-              src="/nav/best.svg"
-              alt=""
-              className="w-[18px] h-[18px] opacity-80"
-            />
-            Best Sellers
-          </Link>
-        </nav>
-
-        {/* Header Icons & Session Controls */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            {/* Expandable Search Input - DESKTOP ONLY */}
+          {/* Static Expanded Search Bar */}
+          <div className="w-[360px]">
             <form
               onSubmit={handleSearchSubmit}
-              className="hidden lg:flex items-center"
+              className="w-full relative flex items-center"
             >
-              <div className="relative flex items-center">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search products..."
-                  className={[
-                    "bg-background/50 border border-line outline-none text-xs transition-all duration-300 ease-in-out placeholder-text-soft/60 rounded-full",
-                    isSearchExpanded
-                      ? "w-40 sm:w-48 px-4 py-2 opacity-100"
-                      : "w-0 px-0 py-0 opacity-0 border-none pointer-events-none",
-                  ].join(" ")}
-                />
-
-                {isSearchExpanded ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsSearchExpanded(false);
-                      setSearchQuery("");
-                    }}
-                    className="absolute right-3.5 text-text-soft hover:text-foreground outline-none transition-colors"
-                  >
-                    <FiX className="text-[14px]" />
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setIsSearchExpanded(true)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-background text-text-soft transition-colors hover:border-text-soft hover:text-foreground outline-none cursor-pointer"
-                    aria-label="Search"
-                  >
-                    <FiSearch className="text-[16px]" />
-                  </button>
-                )}
+              <div className="absolute left-4 text-text-soft/60 flex items-center pointer-events-none">
+                <FiSearch className="text-[16px]" />
               </div>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products..."
+                className="w-full h-[38px] bg-background/50 border border-line hover:border-text-soft/40 focus:border-accent outline-none pl-10 pr-4 text-[13px] text-foreground placeholder-text-soft/50 transition-colors ease-out rounded-full"
+              />
             </form>
+          </div>
+        </div>
 
-            {/* Shopping Cart (Visible Always) */}
-            <button
-              type="button"
-              onClick={() => setIsCartOpen(true)}
-              className="relative flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-line bg-background text-text-soft transition-colors hover:border-text-soft hover:text-foreground outline-none cursor-pointer"
-              aria-label="Cart"
-            >
-              <FiShoppingBag className="text-[15px] sm:text-[16px]" />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-white animate-pulse">
-                  {cartCount}
-                </span>
-              )}
-            </button>
+        {/* 3. Header Utility Icons (Right Aligned) */}
+        <div className="flex items-center gap-3 relative z-10">
+          
+          {/* Restored Wishlist Shortcut */}
+          <Link
+            href="/profile/wishlist"
+            className="hidden lg:flex h-10 w-10 items-center justify-center rounded-full border border-line bg-background text-text-soft transition-colors hover:border-text-soft hover:text-foreground outline-none cursor-pointer"
+            aria-label="Wishlist"
+          >
+            <FiHeart className="text-[16px]" />
+          </Link>
 
-            {/* Auth Session Dropdown - DESKTOP ONLY */}
-            <div className="hidden lg:block">
-              {user ? (
-                <div className="relative group">
-                  <button
-                    type="button"
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f2eadf] border border-line text-xs font-bold text-[#5e4b38] uppercase hover:border-text-soft transition-colors outline-none cursor-pointer"
-                  >
-                    {user.name.charAt(0)}
-                  </button>
-                  {activeOrdersCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-white animate-pulse">
-                      {activeOrdersCount}
-                    </span>
-                  )}
+          {/* Shopping Cart */}
+          <button
+            type="button"
+            onClick={() => setIsCartOpen(true)}
+            className="relative flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-line bg-background text-text-soft transition-colors hover:border-text-soft hover:text-foreground outline-none cursor-pointer"
+            aria-label="Cart"
+          >
+            <FiShoppingBag className="text-[15px] sm:text-[16px]" />
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-white animate-pulse">
+                {cartCount}
+              </span>
+            )}
+          </button>
 
-                  {/* Dropdown Menu on hover */}
-                  <div className="absolute right-0 top-full z-50 mt-2.5 w-44 origin-top-right border border-line bg-surface p-1 shadow-md scale-0 group-hover:scale-100 transition-all duration-150 origin-top divide-y divide-line/40 rounded-md">
-                    <div className="space-y-0.5">
-                      {user.role === "ADMIN" && (
-                        <Link
-                          href="/admin/products"
-                          className="flex items-center gap-2 px-3 py-2.5 text-[10px] uppercase tracking-wider font-semibold text-amber-700 hover:bg-amber-50/30 transition-colors rounded-sm"
-                        >
-                          <FiSliders className="text-[12px]" />
-                          Admin Panel
-                        </Link>
-                      )}
+          {/* User Account Dropdown */}
+          <div className="hidden lg:block">
+            {user ? (
+              <div className="relative group">
+                <button
+                  type="button"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f2eadf] border border-line text-xs font-bold text-[#5e4b38] uppercase hover:border-text-soft transition-colors outline-none cursor-pointer"
+                >
+                  {user.name.charAt(0)}
+                </button>
+                {activeOrdersCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-white animate-pulse">
+                    {activeOrdersCount}
+                  </span>
+                )}
+
+                <div className="absolute right-0 top-full z-50 mt-2.5 w-44 origin-top-right border border-line bg-surface p-1 shadow-md scale-0 group-hover:scale-100 transition-all duration-150 origin-top divide-y divide-line/40 rounded-md">
+                  <div className="space-y-0.5">
+                    {user.role === "ADMIN" && (
                       <Link
-                        href="/orders"
-                        className="flex items-center justify-between px-3 py-2.5 text-[10px] uppercase tracking-wider font-semibold text-text-soft hover:bg-background/20 hover:text-foreground transition-colors rounded-sm"
+                        href="/admin/products"
+                        className="flex items-center gap-2 px-3 py-2.5 text-[10px] uppercase tracking-wider font-semibold text-amber-700 hover:bg-amber-50/30 transition-colors rounded-sm"
                       >
-                        <span className="flex items-center gap-2">
-                          <FiBag className="text-[12px]" />
-                          My Orders
+                        <FiSliders className="text-[12px]" />
+                        Admin Panel
+                      </Link>
+                    )}
+                    <Link
+                      href="/orders"
+                      className="flex items-center justify-between px-3 py-2.5 text-[10px] uppercase tracking-wider font-semibold text-text-soft hover:bg-background/20 hover:text-foreground transition-colors rounded-sm"
+                    >
+                      <span className="flex items-center gap-2">
+                        <FiBag className="text-[12px]" />
+                        My Orders
+                      </span>
+                      {activeOrdersCount > 0 && (
+                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[8px] font-bold text-white">
+                          {activeOrdersCount}
                         </span>
-                        {activeOrdersCount > 0 && (
-                          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[8px] font-bold text-white">
-                            {activeOrdersCount}
-                          </span>
-                        )}
-                      </Link>
-                      <Link
-                        href="/profile"
-                        className="flex items-center gap-2 px-3 py-2.5 text-[10px] uppercase tracking-wider font-semibold text-text-soft hover:bg-background/20 hover:text-foreground transition-colors rounded-sm"
-                      >
-                        <FiUser className="text-[12px]" />
-                        My Profile
-                      </Link>
-                    </div>
-                    <div className="pt-0.5">
-                      <button
-                        type="button"
-                        onClick={logout}
-                        className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-[10px] uppercase tracking-wider font-bold text-red-600 hover:bg-red-50/30 transition-colors cursor-pointer outline-none rounded-sm"
-                      >
-                        <FiLogOut className="text-[12px]" />
-                        Logout
-                      </button>
-                    </div>
+                      )}
+                    </Link>
+                    <Link
+                      href="/profile"
+                      className="flex items-center gap-2 px-3 py-2.5 text-[10px] uppercase tracking-wider font-semibold text-text-soft hover:bg-background/20 hover:text-foreground transition-colors rounded-sm"
+                    >
+                      <FiUser className="text-[12px]" />
+                      My Profile
+                    </Link>
+                    <Link
+                      href="/profile/wishlist"
+                      className="flex items-center gap-2 px-3 py-2.5 text-[10px] uppercase tracking-wider font-semibold text-text-soft hover:bg-background/20 hover:text-foreground transition-colors rounded-sm"
+                    >
+                      <FiHeart className="text-[12px]" />
+                      My Wishlist
+                    </Link>
+                  </div>
+                  <div className="pt-0.5">
+                    <button
+                      type="button"
+                      onClick={logout}
+                      className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-[10px] uppercase tracking-wider font-bold text-red-600 hover:bg-red-50/30 transition-colors cursor-pointer outline-none rounded-sm"
+                    >
+                      <FiLogOut className="text-[12px]" />
+                      Logout
+                    </button>
                   </div>
                 </div>
-              ) : (
-                <Link
-                  href="/auth/signin"
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-background text-text-soft transition-colors hover:border-text-soft hover:text-foreground outline-none cursor-pointer"
-                  aria-label="Login"
-                >
-                  <FiUser className="text-[16px]" />
-                </Link>
-              )}
-            </div>
-
-            {/* MOBILE MENU TOGGLE HAMBURGER (Mobile only) */}
-            <button
-              type="button"
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="flex lg:hidden h-9 w-9 items-center justify-center rounded-full border border-line bg-surface text-text-soft transition-colors hover:text-foreground outline-none cursor-pointer"
-              aria-label="Open mobile menu"
-            >
-              <FiMenu className="text-[18px]" />
-            </button>
+              </div>
+            ) : (
+              <Link
+                href="/auth/signin"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-background text-text-soft transition-colors hover:border-text-soft hover:text-foreground outline-none cursor-pointer"
+                aria-label="Login"
+              >
+                <FiUser className="text-[16px]" />
+              </Link>
+            )}
           </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="flex lg:hidden h-9 w-9 items-center justify-center rounded-full border border-line bg-surface text-text-soft transition-colors hover:text-foreground outline-none cursor-pointer"
+            aria-label="Open mobile menu"
+          >
+            <FiMenu className="text-[18px]" />
+          </button>
         </div>
       </div>
 
-      {/* SLIDE-OUT MOBILE NAVIGATION DRAWER */}
+      {/* SIDE NAVIGATION DRAWER */}
       <div
         className={`fixed inset-0 z-[100] lg:hidden transition-all duration-300 ease-in-out ${
           isMobileMenuOpen
@@ -363,22 +291,18 @@ export function SiteHeader() {
             : "opacity-0 invisible pointer-events-none"
         }`}
       >
-        {/* Dark Overlay Backdrop */}
         <div
           className="absolute inset-0 bg-black/40 backdrop-blur-sm"
           onClick={() => setIsMobileMenuOpen(false)}
         />
-
-        {/* Drawer Panel */}
         <div
           className={`absolute top-0 right-0 bottom-0 w-[280px] sm:w-[320px] bg-surface border-l border-line shadow-2xl transition-transform duration-300 ease-out flex flex-col ${
             isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
-          {/* Panel Header */}
-          <div className="flex items-center justify-between px-6 py-5 border-b border-line bg-background/50">
+          <div className="flex items-center justify-between px-4 border-b border-line bg-background/50">
             <span className="font-display font-semibold tracking-tight text-foreground text-lg">
-              Menu
+              <img src="/logo.svg" alt="logo" className="w-24 h-24" />
             </span>
             <button
               onClick={() => setIsMobileMenuOpen(false)}
@@ -388,9 +312,7 @@ export function SiteHeader() {
             </button>
           </div>
 
-          {/* Panel Scrollable Content */}
           <div className="flex-grow overflow-y-auto px-6 py-6 space-y-8">
-            {/* Mobile Search */}
             <form
               onSubmit={(e) => {
                 handleSearchSubmit(e);
@@ -408,7 +330,6 @@ export function SiteHeader() {
               />
             </form>
 
-            {/* Direct Link Hierarchy */}
             <div className="flex flex-col gap-4 border-b border-line pb-6">
               <Link
                 href="/shop"
@@ -426,9 +347,59 @@ export function SiteHeader() {
                 <img src="/nav/new.svg" alt="" className="w-5 h-5" />
                 New Arrivals
               </Link>
+
+              {user && (
+                <>
+                  <Link
+                    href="/orders"
+                    className="text-base font-medium text-foreground hover:text-accent transition-colors flex items-center justify-between"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <FiBag className="w-5 h-5 text-text-soft" />
+                      My Orders
+                    </div>
+                    {activeOrdersCount > 0 && (
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-white">
+                        {activeOrdersCount}
+                      </span>
+                    )}
+                  </Link>
+                  <Link
+                    href="/profile"
+                    className="text-base font-medium text-foreground hover:text-accent transition-colors flex items-center justify-between"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <FiUser className="w-5 h-5 text-text-soft" />
+                      My Profile
+                    </div>
+                  </Link>
+                  <Link
+                    href="/profile/wishlist"
+                    className="text-base font-medium text-foreground hover:text-accent transition-colors flex items-center justify-between"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <FiHeart className="w-5 h-5 text-text-soft" />
+                      My Wishlist
+                    </div>
+                  </Link>
+
+                  {user.role === "ADMIN" && (
+                    <Link
+                      href="/admin/products"
+                      className="text-base font-medium text-amber-700 hover:text-amber-800 transition-colors flex items-center gap-3"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <FiSliders className="w-5 h-5" />
+                      Admin Control
+                    </Link>
+                  )}
+                </>
+              )}
             </div>
 
-            {/* Mobile Categories Cluster */}
             <div className="space-y-4">
               <h3 className="text-[11px] uppercase tracking-[0.2em] font-bold text-text-soft">
                 Categories
@@ -457,7 +428,6 @@ export function SiteHeader() {
             </div>
           </div>
 
-          {/* Panel Footer sticky actions (Auth) */}
           <div className="p-6 border-t border-line bg-background/50">
             {user ? (
               <div className="flex items-center justify-between">

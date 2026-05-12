@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { FiFilter, FiRefreshCw, FiSliders, FiX, FiLoader } from "react-icons/fi";
+import { FiFilter, FiRefreshCw, FiSliders, FiX } from "react-icons/fi";
+import { LogoLoader } from "@/components/ui/logo-loader";
 import { Button } from "../ui/button";
 import { ProductCard } from "../landing/product-card";
 import { getCategoryIconPath } from "@/components/admin/categories-data";
@@ -24,10 +25,12 @@ export function ShopPage() {
   // Dynamic DB states
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [brands, setBrands] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Filter states
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("All");
+  const [selectedBrandId, setSelectedBrandId] = useState<string>("All");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("All");
   const [maxPrice, setMaxPrice] = useState<number>(3000);
   const [onlyOffers, setOnlyOffers] = useState(false);
@@ -40,20 +43,23 @@ export function ShopPage() {
     const loadData = async () => {
       try {
         setLoading(true);
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-        const [prodRes, catRes] = await Promise.all([
+        const baseUrl =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+        const [prodRes, catRes, brandRes] = await Promise.all([
           fetch(`${baseUrl}/products`),
           fetch(`${baseUrl}/categories`),
+          fetch(`${baseUrl}/brands`),
         ]);
-        const [prodJson, catJson] = await Promise.all([
+        const [prodJson, catJson, brandJson] = await Promise.all([
           prodRes.json(),
           catRes.json(),
+          brandRes.json(),
         ]);
 
         if (prodJson.success) {
           setProducts(prodJson.data);
           const prices = prodJson.data.flatMap((p: any) =>
-            (p.sizes || []).map((s: any) => Number(s.price))
+            (p.sizes || []).map((s: any) => Number(s.price)),
           );
           if (prices.length > 0) {
             setMaxPrice(Math.max(...prices));
@@ -61,6 +67,9 @@ export function ShopPage() {
         }
         if (catJson.success) {
           setCategories(catJson.data.filter((c: any) => c.status === "Active"));
+        }
+        if (brandJson.success) {
+          setBrands(brandJson.data.filter((b: any) => b.status === "Active"));
         }
       } catch (err) {
         console.error("Failed to load live shop data from database:", err);
@@ -78,7 +87,7 @@ export function ShopPage() {
         (c) =>
           c.id === categoryParam ||
           c.slug === categoryParam ||
-          c.name.toLowerCase() === categoryParam.toLowerCase()
+          c.name.toLowerCase() === categoryParam.toLowerCase(),
       );
       if (matched) {
         setSelectedCategoryId(matched.id);
@@ -89,12 +98,26 @@ export function ShopPage() {
 
   // Dynamic price limits
   const priceValues = useMemo(() => {
-    const vals = products.flatMap((p) => (p.sizes || []).map((s: any) => Number(s.price)));
+    const vals = products.flatMap((p) =>
+      (p.sizes || []).map((s: any) => Number(s.price)),
+    );
     return vals.length > 0 ? vals : [0, 3000];
   }, [products]);
 
-  const minAvailablePrice = useMemo(() => Math.min(...priceValues), [priceValues]);
-  const maxAvailablePrice = useMemo(() => Math.max(...priceValues), [priceValues]);
+  const minAvailablePrice = useMemo(
+    () => Math.min(...priceValues),
+    [priceValues],
+  );
+  useEffect(() => {
+    if (!loading) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [selectedCategoryId, selectedBrandId, selectedSubcategory]);
+
+  const maxAvailablePrice = useMemo(
+    () => Math.max(...priceValues),
+    [priceValues],
+  );
 
   // Active parent category subcategories
   const activeSubcategories = useMemo(() => {
@@ -107,34 +130,59 @@ export function ShopPage() {
     let items = products.filter((product) => {
       const price = Number(product.sizes?.[0]?.price || 0);
       const categoryMatch =
-        selectedCategoryId === "All" || product.categoryId === selectedCategoryId;
+        selectedCategoryId === "All" ||
+        product.categoryId === selectedCategoryId;
+      const brandMatch =
+        selectedBrandId === "All" || product.brandId === selectedBrandId;
       const subcategoryMatch =
-        selectedSubcategory === "All" || product.subcategory === selectedSubcategory;
+        selectedSubcategory === "All" ||
+        product.subcategory === selectedSubcategory;
       const priceMatch = price <= maxPrice;
       const offerMatch = !onlyOffers || Boolean(product.hasOffer);
-      const ratingMatch =
-        !topRatedOnly || Number(product.rating || 5.0) >= 4.5;
+      const ratingMatch = !topRatedOnly || Number(product.rating || 5.0) >= 4.5;
       const searchMatch =
         !searchParam ||
         product.name.toLowerCase().includes(searchParam.toLowerCase()) ||
-        (product.description || "").toLowerCase().includes(searchParam.toLowerCase());
+        (product.description || "")
+          .toLowerCase()
+          .includes(searchParam.toLowerCase());
 
-      return categoryMatch && subcategoryMatch && priceMatch && offerMatch && ratingMatch && searchMatch;
+      return (
+        categoryMatch &&
+        brandMatch &&
+        subcategoryMatch &&
+        priceMatch &&
+        offerMatch &&
+        ratingMatch &&
+        searchMatch
+      );
     });
 
     // Sorting logic
     if (sortKey === "price-asc") {
       items = [...items].sort(
-        (a, b) => Number(a.sizes?.[0]?.price || 0) - Number(b.sizes?.[0]?.price || 0)
+        (a, b) =>
+          Number(a.sizes?.[0]?.price || 0) - Number(b.sizes?.[0]?.price || 0),
       );
     } else if (sortKey === "price-desc") {
       items = [...items].sort(
-        (a, b) => Number(b.sizes?.[0]?.price || 0) - Number(a.sizes?.[0]?.price || 0)
+        (a, b) =>
+          Number(b.sizes?.[0]?.price || 0) - Number(a.sizes?.[0]?.price || 0),
       );
     }
 
     return items;
-  }, [products, selectedCategoryId, selectedSubcategory, maxPrice, onlyOffers, topRatedOnly, sortKey, searchParam]);
+  }, [
+    products,
+    selectedCategoryId,
+    selectedBrandId,
+    selectedSubcategory,
+    maxPrice,
+    onlyOffers,
+    topRatedOnly,
+    sortKey,
+    searchParam,
+  ]);
 
   const activeCategoryLabel = useMemo(() => {
     if (selectedCategoryId === "All") return "All Categories";
@@ -146,8 +194,15 @@ export function ShopPage() {
     return label;
   }, [categories, selectedCategoryId, selectedSubcategory]);
 
+  const activeBrandLabel = useMemo(() => {
+    if (selectedBrandId === "All") return null;
+    const b = brands.find((item) => item.id === selectedBrandId);
+    return b ? b.name : null;
+  }, [brands, selectedBrandId]);
+
   const resetFilters = () => {
     setSelectedCategoryId("All");
+    setSelectedBrandId("All");
     setSelectedSubcategory("All");
     setMaxPrice(maxAvailablePrice);
     setOnlyOffers(false);
@@ -195,7 +250,7 @@ export function ShopPage() {
               ].join(" ")}
             >
               <div className="w-9 h-9 flex items-center justify-center shrink-0">
-                 <FiFilter className="text-lg" />
+                <FiFilter className="text-lg" />
               </div>
               <span className="font-medium text-base">All Categories</span>
             </button>
@@ -225,7 +280,9 @@ export function ShopPage() {
                       className="w-8 h-8 object-contain"
                     />
                   </div>
-                  <span className="truncate font-medium text-base">{category.name}</span>
+                  <span className="truncate font-medium text-base">
+                    {category.name}
+                  </span>
                 </button>
               );
             })}
@@ -274,6 +331,60 @@ export function ShopPage() {
           </div>
         )}
 
+        {/* Brand Filter */}
+        {brands.length > 0 && (
+          <div>
+            <p className="text-[11px] uppercase tracking-widest text-text-soft font-bold mb-3">
+              BRANDS
+            </p>
+            <div className="flex flex-col gap-1 max-h-60 overflow-y-auto pr-1 scrollbar-thin">
+              <button
+                type="button"
+                onClick={() => setSelectedBrandId("All")}
+                className={[
+                  "flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                  selectedBrandId === "All"
+                    ? "bg-accent/10 text-accent"
+                    : "text-foreground/80 hover:bg-surface-strong",
+                ].join(" ")}
+              >
+                All Brands
+              </button>
+              {brands.map((brand) => {
+                const active = selectedBrandId === brand.id;
+                return (
+                  <button
+                    key={brand.id}
+                    type="button"
+                    onClick={() => setSelectedBrandId(brand.id)}
+                    className={[
+                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-left",
+                      active
+                        ? "bg-accent/10 text-accent"
+                        : "text-foreground/80 hover:bg-surface-strong",
+                    ].join(" ")}
+                  >
+                    <div className="w-7 h-7 shrink-0 bg-white border border-line rounded-full flex items-center justify-center overflow-hidden">
+                      {brand.logo ? (
+                        <img
+                          src={brand.logo}
+                          alt=""
+                          className="w-full h-full object-contain p-0.5"
+                        />
+                      ) : (
+                        <div className="text-[9px] text-text-soft font-bold">
+                          {brand.name.charAt(0)}
+                        </div>
+                      )}
+                    </div>
+                    <span className="truncate">{brand.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Price Filter */}
         <div>
           <p className="text-[11px] uppercase tracking-widest text-text-soft font-bold mb-3">
@@ -281,7 +392,9 @@ export function ShopPage() {
           </p>
           <div className="mt-4">
             <div className="flex items-center gap-3">
-              <span className="text-sm text-text-soft">{minAvailablePrice}</span>
+              <span className="text-sm text-text-soft">
+                {minAvailablePrice}
+              </span>
               <input
                 type="range"
                 min={minAvailablePrice}
@@ -325,7 +438,7 @@ export function ShopPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-40 space-y-4">
-        <FiLoader className="animate-spin text-4xl text-accent" />
+        <LogoLoader size="lg" />
         <p className="text-sm text-text-soft">Loading Elara shop...</p>
       </div>
     );
@@ -338,8 +451,6 @@ export function ShopPage() {
           Explore products by category.
         </h1>
       </div>
-
-
 
       <div className="grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)]">
         <aside className="hidden h-fit border border-line/50 bg-surface rounded-2xl p-6 lg:block lg:sticky lg:top-6">
@@ -402,21 +513,36 @@ export function ShopPage() {
                 <FiFilter className="text-[14px]" />
                 Filter
               </Button>
-              <button
-                type="button"
-                onClick={selectedCategoryId === "All" ? undefined : resetFilters}
-                className={[
-                  "inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium transition-all h-9 rounded-full",
-                  selectedCategoryId === "All"
-                    ? "bg-surface-strong text-foreground/80"
-                    : "bg-accent text-white shadow-sm",
-                ].join(" ")}
-              >
-                <span>{activeCategoryLabel}</span>
-                {selectedCategoryId !== "All" ? (
+              {/* Active Category Tag */}
+              {selectedCategoryId !== "All" ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategoryId("All");
+                    setSelectedSubcategory("All");
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium transition-all h-9 rounded-full bg-accent text-white shadow-sm hover:bg-accent-deep"
+                >
+                  <span>{activeCategoryLabel}</span>
                   <FiX className="text-[12px]" />
-                ) : null}
-              </button>
+                </button>
+              ) : (
+                <div className="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium h-9 rounded-full bg-surface-strong text-foreground/80">
+                  All Categories
+                </div>
+              )}
+
+              {/* Active Brand Tag */}
+              {selectedBrandId !== "All" && activeBrandLabel && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedBrandId("All")}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium transition-all h-9 rounded-full bg-accent text-white shadow-sm hover:bg-accent-deep"
+                >
+                  <span>Brand: {activeBrandLabel}</span>
+                  <FiX className="text-[12px]" />
+                </button>
+              )}
             </div>
             <span className="hidden lg:block shrink-0 text-xs uppercase tracking-[0.22em] text-text-soft">
               {filteredProducts.length} items

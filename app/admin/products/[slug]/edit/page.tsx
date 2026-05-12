@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiArrowLeft, FiPlus, FiSave, FiX, FiLoader } from "react-icons/fi";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { BrandSelect } from "@/components/admin/brand-select";
 
 const sizeUnits = ["ml", "g", "pcs"];
 
@@ -28,6 +29,12 @@ interface Category {
   subcategories?: string[];
 }
 
+interface Brand {
+  id: string;
+  name: string;
+  logo?: string | null;
+}
+
 type ProductEditPageProps = {
   params: Promise<{ slug: string }>;
 };
@@ -38,6 +45,8 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
   // Loading & Action States
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [brandsLoading, setBrandsLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -50,6 +59,7 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
   const [rating, setRating] = useState("5.0");
   const [reviewCount, setReviewCount] = useState("0");
   const [categoryId, setCategoryId] = useState("");
+  const [brandId, setBrandId] = useState("");
   const [subcategory, setSubcategory] = useState("");
   const [shortDescription, setShortDescription] = useState("");
   const [description, setDescription] = useState("");
@@ -65,6 +75,7 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
   const [reviewRows, setReviewRows] = useState<ReviewRow[]>([]);
   const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
   const [imageUrlInput, setImageUrlInput] = useState("");
+  const [activeOffers, setActiveOffers] = useState<any[]>([]);
 
   const galleryInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -80,6 +91,20 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
         const catJson = await catRes.json();
         if (catJson.success) {
           setCategories(catJson.data);
+        }
+
+        // 1.5. Fetch Brands
+        try {
+          setBrandsLoading(true);
+          const bRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/brands`);
+          const bJson = await bRes.json();
+          if (bJson.success) {
+            setBrands(bJson.data);
+          }
+        } catch(e) {
+           console.error("Failed load brands in edit:", e);
+        } finally {
+          setBrandsLoading(false);
         }
 
         // 2. Fetch product state
@@ -101,6 +126,7 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
           setRating(String(prod.rating));
           setReviewCount(String(prod.reviewCount));
           setCategoryId(prod.categoryId);
+          setBrandId(prod.brandId || "");
           setSubcategory(prod.subcategory || "");
           setShortDescription(prod.shortDescription || "");
           setDescription(prod.description || "");
@@ -113,6 +139,12 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
             setGalleryUrls([]);
           }
           setHowToUseRows(prod.howToUse && prod.howToUse.length > 0 ? prod.howToUse : [""]);
+
+          if (prod.offers && prod.offers.length > 0) {
+            setActiveOffers(prod.offers);
+          } else {
+            setActiveOffers([]);
+          }
 
           // Parse Sizes
           if (prod.sizes && prod.sizes.length > 0) {
@@ -192,6 +224,28 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
     }
   };
 
+  const handleRemoveOffer = async (offerId: string) => {
+    if (!confirm("Are you sure you want to remove this offer from this product?")) return;
+    try {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+      const res = await fetch(`${apiBase}/products/${productId}/offers/${offerId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("elara_token")}`,
+        },
+      });
+      const json = await res.json();
+      if (json.success) {
+        setActiveOffers((prev) => prev.filter(o => o.id !== offerId));
+      } else {
+        alert("Failed to remove offer.");
+      }
+    } catch (err) {
+      alert("Error removing offer.");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!sku || !name || !categoryId) {
@@ -225,6 +279,7 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
         sku,
         name,
         categoryId,
+        brandId: brandId || null,
         subcategory: subcategory || undefined,
         hasOffer: parsedSizes.some((s) => s.oldPrice && s.oldPrice > s.price),
         rating: Number(rating),
@@ -383,6 +438,16 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
             </label>
 
             <label className="block text-sm">
+              <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-text-soft">Brand (Optional)</span>
+              <BrandSelect
+                brands={brands}
+                value={brandId}
+                onChange={setBrandId}
+                loading={brandsLoading}
+              />
+            </label>
+
+            <label className="block text-sm">
               <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-text-soft">Subcategory</span>
               <select
                 value={subcategory}
@@ -493,6 +558,40 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
             </div>
           </div>
         </section>
+
+        {/* Active Offers */}
+        {activeOffers.length > 0 && (
+          <section className="border border-line bg-surface px-5 py-5">
+            <h3 className="text-lg font-semibold tracking-[-0.03em] text-foreground">
+              Active Offers
+            </h3>
+            <span className="mt-2 block text-xs text-text-soft leading-6">
+              This product is currently part of the following offers. Remove an offer to decouple it from this product.
+            </span>
+            <div className="mt-4 space-y-3">
+              {activeOffers.map((offer) => (
+                <div key={offer.id} className="flex items-center justify-between border border-line bg-background px-4 py-3">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{offer.title}</p>
+                    <p className="text-[11px] uppercase tracking-wider text-text-soft mt-1">
+                      {offer.discountType === "PERCENTAGE" ? `${offer.discountValue}% OFF` : `${offer.discountValue} BDT OFF`}
+                      {offer.isFlashSale && <span className="ml-2 text-red-500 font-bold">Flash Sale</span>}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="border-red-500/30 text-red-600 hover:bg-red-50"
+                    onClick={() => handleRemoveOffer(offer.id)}
+                  >
+                    <FiX className="mr-1" /> Remove Offer
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Sizes and Pricing */}
         <section className="border border-line bg-surface px-5 py-5">

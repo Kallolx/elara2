@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Product, products as initialProducts } from "@/lib/data";
+import { FullPageLoader } from "@/components/ui/full-page-loader";
 
 export interface HeroBanner {
   image: string;
@@ -187,7 +188,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         `,
         }}
       />
-      {children}
+      {!isLoaded ? <FullPageLoader /> : children}
     </StoreContext.Provider>
   );
 }

@@ -27,6 +27,8 @@ interface ScrapedProduct {
   name: string;
   price: number;
   commission: number;
+  stockStatus?: string;
+  isOutOfStock?: boolean;
   oldPrice: number | null;
   image: string;
   url: string;
@@ -44,6 +46,7 @@ export default function KobaSourcingPage() {
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [products, setProducts] = useState<ScrapedProduct[]>([]);
   const [loading, setLoading] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
   const [importingMap, setImportingMap] = useState<
     Record<string, "idle" | "loading" | "success">
   >({});
@@ -313,7 +316,7 @@ export default function KobaSourcingPage() {
           <button
             type="submit"
             disabled={loading}
-            className="border border-accent bg-accent px-5 py-3 text-xs uppercase tracking-widest font-bold text-white hover:bg-accent-deep transition-colors cursor-pointer outline-none flex items-center justify-center gap-1.5 disabled:opacity-50"
+            className="w-full border border-accent bg-accent px-5 py-3 text-xs uppercase tracking-widest font-bold text-white hover:bg-accent-deep transition-colors cursor-pointer outline-none flex items-center justify-center gap-1.5 disabled:opacity-50 rounded-sm"
           >
             {loading ? (
               <>
@@ -498,8 +501,22 @@ export default function KobaSourcingPage() {
                         </div>
 
                         {/* Volume badge */}
-                        <div className="mt-2 inline-flex self-start items-center gap-1 bg-[#f8fafc] border border-stone-100 px-2.5 py-1 rounded-lg text-[10px] font-bold text-stone-600 shadow-sm uppercase tracking-wider shrink-0">
-                          🧴 Volume: {detectedSize}
+                        {/* Volume & Stock badges */}
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5 shrink-0">
+                          <div className="inline-flex items-center gap-1 bg-[#f8fafc] border border-stone-100 px-2.5 py-1 rounded-lg text-[9px] font-bold text-stone-600 shadow-sm uppercase tracking-wider">
+                            🧴 {detectedSize}
+                          </div>
+                          
+                          {product.stockStatus && product.stockStatus !== "Unknown" && (
+                            <div className={[
+                              "inline-flex items-center gap-1 border px-2.5 py-1 rounded-lg text-[9px] font-bold shadow-sm uppercase tracking-wider",
+                              product.isOutOfStock 
+                                ? "bg-red-50 border-red-100 text-red-600"
+                                : "bg-emerald-50 border-emerald-100 text-emerald-600"
+                            ].join(" ")}>
+                              📦 {product.stockStatus}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -607,15 +624,17 @@ export default function KobaSourcingPage() {
 
                       <button
                         type="button"
-                        disabled={state !== "idle"}
+                        disabled={state !== "idle" || product.isOutOfStock}
                         onClick={() => handleImport(product)}
                         className={[
                           "py-3 text-[10px] uppercase tracking-widest font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer shadow-sm outline-none",
                           state === "success"
                             ? "border-emerald-200 bg-emerald-50 text-emerald-700 font-bold"
-                            : state === "loading"
-                              ? "border-stone-200 bg-stone-100 text-stone-500 cursor-not-allowed"
-                              : "border-accent bg-accent text-white hover:bg-accent-deep active:scale-[0.98]",
+                            : product.isOutOfStock
+                              ? "border-stone-200 bg-stone-50 text-stone-400 cursor-not-allowed"
+                              : state === "loading"
+                                ? "border-stone-200 bg-stone-100 text-stone-500 cursor-not-allowed"
+                                : "border-accent bg-accent text-white hover:bg-accent-deep active:scale-[0.98]",
                         ].join(" ")}
                       >
                         {state === "success" ? (
@@ -623,6 +642,8 @@ export default function KobaSourcingPage() {
                             <span>✓</span>
                             <span>Imported</span>
                           </>
+                        ) : product.isOutOfStock ? (
+                          "Out of Stock"
                         ) : state === "loading" ? (
                           "Importing..."
                         ) : (

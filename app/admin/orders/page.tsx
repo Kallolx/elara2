@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { FiPlus } from "react-icons/fi";
+import { FiPlus, FiTrash2 } from "react-icons/fi";
 import { ButtonLink } from "@/components/ui/button";
 
 interface OrderItem {
@@ -56,6 +56,33 @@ export default function AdminOrdersPage() {
 
     fetchOrders();
   }, []);
+
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!confirm("Are you certain you want to permanently expunge this order? This cannot be reverted.")) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("elara_token");
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+      const res = await fetch(`${baseUrl}/orders/${orderId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        setOrders((prev) => prev.filter((o) => o.id !== orderId));
+      } else {
+        alert(json.message || "Failed to delete order.");
+      }
+    } catch (err) {
+      console.error("Error deleting admin order:", err);
+      alert("An error occurred while attempting order deletion.");
+    }
+  };
 
   const getStatusBadgeStyle = (status: string) => {
     switch (status) {
@@ -136,12 +163,20 @@ export default function AdminOrdersPage() {
                       </div>
                     </div>
                     <div className="mt-4 border-t border-line pt-3">
-                      <Link
-                        href={`/admin/orders/${order.id}`}
-                        className="inline-flex items-center gap-2 border border-line bg-surface px-3 py-2 text-xs uppercase tracking-[0.22em] text-foreground cursor-pointer"
-                      >
-                        View details
-                      </Link>
+                      <div className="flex gap-2">
+                        <Link
+                          href={`/admin/orders/${order.id}`}
+                          className="inline-flex items-center gap-2 border border-line bg-surface px-3 py-2 text-xs uppercase tracking-[0.22em] text-foreground cursor-pointer"
+                        >
+                          View
+                        </Link>
+                        <button
+                          onClick={() => handleDeleteOrder(order.id)}
+                          className="inline-flex items-center justify-center border border-red-100 bg-red-50/30 text-red-600 hover:bg-red-50 px-3 py-2 text-xs uppercase tracking-[0.22em] transition-colors cursor-pointer"
+                        >
+                          <FiTrash2 />
+                        </button>
+                      </div>
                     </div>
                   </article>
                 );
@@ -186,12 +221,21 @@ export default function AdminOrdersPage() {
                         </td>
                         <td className="px-5 py-4 text-text-soft">{order.paymentMethod}</td>
                         <td className="px-5 py-4">
-                          <Link
-                            href={`/admin/orders/${order.id}`}
-                            className="inline-flex items-center gap-2 border border-line bg-background px-3 py-2 text-xs uppercase tracking-[0.22em] text-foreground cursor-pointer"
-                          >
-                            View
-                          </Link>
+                          <div className="flex gap-2">
+                            <Link
+                              href={`/admin/orders/${order.id}`}
+                              className="inline-flex items-center gap-2 border border-line bg-background px-3 py-2 text-xs uppercase tracking-[0.22em] text-foreground cursor-pointer"
+                            >
+                              View
+                            </Link>
+                            <button
+                              onClick={() => handleDeleteOrder(order.id)}
+                              className="inline-flex items-center justify-center border border-red-100 bg-red-50/30 text-red-600 hover:bg-red-50 px-3 py-2 text-xs transition-colors cursor-pointer"
+                              title="Delete Order"
+                            >
+                              <FiTrash2 className="text-sm" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );

@@ -18,7 +18,9 @@ export function CategoriesSection() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/categories`);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/categories`,
+        );
         const json = await res.json();
         if (json.success) {
           // Only show active categories
@@ -36,7 +38,10 @@ export function CategoriesSection() {
 
   if (loading) {
     return (
-      <section id="categories" className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8 lg:px-10">
+      <section
+        id="categories"
+        className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8 lg:px-10"
+      >
         <div className="mb-8 text-center">
           <h2 className="mt-2 font-display text-3xl font-semibold tracking-[-0.03em] text-foreground sm:text-4xl">
             Categories
@@ -63,9 +68,12 @@ export function CategoriesSection() {
   }
 
   return (
-    <section id="categories" className="mx-auto w-full max-w-7xl px-5 py-4 sm:px-8 lg:px-10 pb-8">
-      <div className="mb-8 text-center">
-        <h2 className="mt-2 font-display text-2xl md:text-3xl font-semibold tracking-[-0.03em] text-foreground">
+    <section
+      id="categories"
+      className="mx-auto w-full max-w-7xl px-5 py-4 sm:px-8 lg:px-10 pb-8"
+    >
+      <div className="mb-8 text-center pt-4">
+        <h2 className="text-3xl font-serif text-text sm:text-4xl">
           Categories
         </h2>
       </div>
@@ -81,9 +89,9 @@ export function CategoriesSection() {
               aria-label={`Browse ${category.name}`}
             >
               <span className="flex items-center justify-center w-20 h-20 mb-1 transition-transform group-hover:scale-110 duration-300">
-                <img 
-                  src={getCategoryIconPath(category.icon)} 
-                  alt="" 
+                <img
+                  src={getCategoryIconPath(category.icon)}
+                  alt=""
                   className="w-full h-full object-contain"
                 />
               </span>

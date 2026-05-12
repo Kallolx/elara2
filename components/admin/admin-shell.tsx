@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FiBarChart2,
   FiGrid,
@@ -17,18 +18,46 @@ import {
   FiMenu,
   FiUsers,
   FiInstagram,
+  FiAward,
+  FiImage,
+  FiChevronDown,
+  FiExternalLink,
+  FiTag,
 } from "react-icons/fi";
 import { ButtonLink } from "../ui/button";
 
-const navigationItems = [
-  { href: "/admin", label: "Home", icon: FiHome },
-  { href: "/admin/sourcing", label: "Koba Sourcing", icon: FiPlus },
-  { href: "/admin/orders", label: "Orders", icon: FiShoppingBag },
-  { href: "/admin/categories", label: "Categories", icon: FiGrid },
-  { href: "/admin/products", label: "Products", icon: FiPackage },
-  { href: "/admin/customers", label: "Customers", icon: FiUsers },
-  { href: "/admin/social", label: "Social Media", icon: FiInstagram },
-  { href: "/admin/site", label: "Site", icon: FiSettings },
+const navigationGroups = [
+  {
+    title: "Overview",
+    items: [
+      { href: "/admin", label: "Dashboard", icon: FiHome },
+      { href: "/admin/orders", label: "Orders", icon: FiShoppingBag },
+      { href: "/admin/customers", label: "Customers", icon: FiUsers },
+    ]
+  },
+  {
+    title: "Catalog Management",
+    items: [
+      { href: "/admin/products", label: "Products", icon: FiPackage },
+      { href: "/admin/categories", label: "Categories", icon: FiGrid },
+      { href: "/admin/brands", label: "Brands", icon: FiAward },
+    ]
+  },
+  {
+    title: "Marketing & Assets",
+    items: [
+      { href: "/admin/offers", label: "Offers & Sales", icon: FiTag },
+      { href: "/admin/gallery", label: "Media Gallery", icon: FiImage },
+      { href: "/admin/social", label: "Social Media", icon: FiInstagram },
+      { href: "/admin/sourcing", label: "Koba Sourcing", icon: FiPlus },
+    ]
+  },
+  {
+    title: "Site Engine",
+    items: [
+      { href: "/admin/site", label: "Settings", icon: FiSettings },
+    ]
+  }
 ];
 
 export function AdminShell({ children }: { children: ReactNode }) {
@@ -37,6 +66,19 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const { user, loading, logout } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [hasUnseenOrders, setHasUnseenOrders] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (loading || !user || user.role !== "ADMIN") return;
@@ -55,13 +97,11 @@ export function AdminShell({ children }: { children: ReactNode }) {
           const seenOrdersStr = localStorage.getItem("elara_seen_orders");
           const seenOrderIds: string[] = seenOrdersStr ? JSON.parse(seenOrdersStr) : [];
 
-          // If current pathname is on the admin orders page, mark all as seen
           if (pathname === "/admin/orders") {
             const currentIds = allOrders.map((o: any) => o.id);
             localStorage.setItem("elara_seen_orders", JSON.stringify(currentIds));
             setHasUnseenOrders(false);
           } else {
-            // Check if there are any orders not present in the seen list
             const unseen = allOrders.some((o: any) => !seenOrderIds.includes(o.id));
             setHasUnseenOrders(unseen);
           }
@@ -82,8 +122,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
     }
   }, [loading, user, router]);
 
+  const allNavItems = navigationGroups.flatMap(g => g.items);
+  
   const activeSection =
-    navigationItems
+    allNavItems
       .filter(
         (item) =>
           pathname === item.href || pathname.startsWith(`${item.href}/`),
@@ -112,14 +154,14 @@ export function AdminShell({ children }: { children: ReactNode }) {
         ) : null}
         <aside
           className={[
-            "bg-accent-deep text-white lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-72 lg:flex-col",
+            "bg-accent-deep text-white lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-72 lg:flex-col overflow-y-auto scrollbar-thin",
             "fixed left-0 top-0 z-50 h-full w-[82%] max-w-[280px] transition-transform duration-300 ease-out lg:static lg:translate-x-0",
             isSidebarOpen
               ? "translate-x-0"
               : "-translate-x-full lg:translate-x-0",
           ].join(" ")}
         >
-          <div className="px-5 py-5 sm:px-8 lg:px-6">
+          <div className="px-5 py-5 sm:px-8 lg:px-6 shrink-0">
             <Link href="/" className="inline-flex items-center gap-3">
               <span className="flex h-11 w-11 items-center justify-center border border-white/15 bg-white/10 text-sm font-semibold tracking-[0.24em] text-white">
                 E
@@ -132,59 +174,42 @@ export function AdminShell({ children }: { children: ReactNode }) {
             </Link>
           </div>
 
-          <nav className="grid grid-cols-1 gap-2 px-4 py-4 sm:grid-cols-2 lg:flex lg:flex-1 lg:flex-col lg:px-4 lg:py-5">
-            {navigationItems.map((item) => {
-              const active = pathname === item.href;
-              const Icon = item.icon;
+          <nav className="flex flex-col flex-1 gap-6 px-4 py-4">
+            {navigationGroups.map((group) => (
+              <div key={group.title} className="space-y-1.5">
+                <p className="px-4 text-sm text-white/40">
+                  {group.title}
+                </p>
+                <div className="space-y-0.5">
+                  {group.items.map((item) => {
+                    const active = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
+                    const Icon = item.icon;
 
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={[
-                    "inline-flex w-full items-center gap-3 border border-transparent px-4 py-3 text-xs uppercase tracking-[0.24em] transition-colors lg:justify-start",
-                    active
-                      ? "bg-white/10 text-white"
-                      : "bg-transparent text-white/85 hover:bg-white/5 hover:text-white",
-                  ].join(" ")}
-                >
-                  <Icon className="text-[15px]" />
-                  <span className="relative inline-flex items-center gap-1.5">
-                    {item.label}
-                    {item.label === "Orders" && hasUnseenOrders && (
-                      <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-                    )}
-                  </span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          <div className="hidden px-6 py-5 lg:block">
-            <div className="grid gap-2 text-sm">
-              <Link
-                href="/shop"
-                className="border border-white/10 bg-white/5 px-4 py-3 text-white transition-colors hover:border-white/30 hover:bg-white/10"
-              >
-                Open shop
-              </Link>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              <div className="flex items-center gap-2 border border-white/10 bg-white/5 px-4 py-3 text-sm text-white">
-                <FiUser className="text-[14px]" />
-                {user.name}
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={[
+                          "flex w-full items-center gap-3 border border-transparent px-4 py-2.5 text-sm transition-colors",
+                          active
+                            ? "bg-white/10 text-white font-medium"
+                            : "bg-transparent text-white/70 hover:bg-white/5 hover:text-white",
+                        ].join(" ")}
+                      >
+                        <Icon className={`text-[14px] ${active ? "text-accent" : "text-inherit"}`} />
+                        <span className="relative inline-flex items-center gap-1.5">
+                          {item.label}
+                          {item.label === "Orders" && hasUnseenOrders && (
+                            <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />
+                          )}
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={logout}
-                className="flex w-full items-center gap-2 border border-white/10 bg-white/5 px-4 py-3 text-left text-sm text-white transition-colors hover:border-white/30 hover:bg-white/10 cursor-pointer"
-              >
-                <FiLogOut className="text-[14px]" />
-                Logout
-              </button>
-            </div>
-          </div>
+            ))}
+          </nav>
         </aside>
 
         <div className="flex-1">
@@ -211,11 +236,80 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 </ButtonLink>
                 <Link
                   href="/admin/products/new"
-                  className="inline-flex items-center gap-2 border border-line bg-background px-4 py-3 text-xs uppercase tracking-[0.22em] text-foreground"
+                  className="inline-flex items-center gap-2 border border-line bg-background px-4 py-3 text-xs uppercase tracking-[0.22em] text-foreground hover:border-accent transition-colors"
                 >
                   <FiPlus className="text-[14px]" />
-                  Add Product
+                  Product
                 </Link>
+
+                {/* Vertical Divider */}
+                <div className="hidden sm:block h-8 w-px bg-line mx-1" />
+
+                {/* User Account Menu */}
+                <div className="relative" ref={userMenuRef}>
+                  <button
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    className={`flex items-center gap-2.5 border px-3 py-2 text-foreground transition-all ${
+                      isUserMenuOpen ? "bg-surface border-accent" : "bg-background border-line hover:border-accent/50"
+                    }`}
+                  >
+                    <div className="w-7 h-7 rounded-full bg-accent-deep text-white flex items-center justify-center text-xs font-bold">
+                      {user.name?.charAt(0).toUpperCase() || "A"}
+                    </div>
+                    <span className="hidden md:block text-xs font-medium text-foreground max-w-[100px] truncate">
+                      {user.name?.split(" ")[0]}
+                    </span>
+                    <FiChevronDown className={`text-xs text-text-soft transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {isUserMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 mt-2 w-56 border border-line bg-surface shadow-xl z-[100] overflow-hidden"
+                      >
+                        <div className="p-4 border-b border-line bg-background/50">
+                          <p className="text-sm font-semibold text-foreground truncate">{user.name}</p>
+                          <p className="text-[10px] uppercase tracking-wider text-text-soft mt-0.5">Administrator</p>
+                        </div>
+
+                        <div className="p-1.5">
+                          <Link
+                            href="/shop"
+                            target="_blank"
+                            className="flex items-center gap-3 w-full text-left px-3 py-2.5 text-sm text-foreground hover:bg-background transition-colors group"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            <FiExternalLink className="text-text-soft group-hover:text-accent" />
+                            <span>View Storefront</span>
+                          </Link>
+                          
+                          <Link
+                            href="/admin/site"
+                            className="flex items-center gap-3 w-full text-left px-3 py-2.5 text-sm text-foreground hover:bg-background transition-colors group"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            <FiSettings className="text-text-soft group-hover:text-accent" />
+                            <span>Site Settings</span>
+                          </Link>
+                        </div>
+
+                        <div className="p-1.5 border-t border-line">
+                          <button
+                            onClick={logout}
+                            className="flex items-center gap-3 w-full text-left px-3 py-2.5 text-sm text-red-600 font-medium hover:bg-red-50 transition-colors group"
+                          >
+                            <FiLogOut className="group-hover:translate-x-0.5 transition-transform" />
+                            <span>Sign Out</span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </div>
           </header>
