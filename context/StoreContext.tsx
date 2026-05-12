@@ -24,7 +24,6 @@ export interface StoreSettings {
     image: string;
     subcategories: { id: string; name: string }[];
   }[];
-  featuredProductIds: string[];
   colors: {
     primary: string;
     secondary: string;
@@ -43,7 +42,6 @@ const defaultSettings: StoreSettings = {
   heroPrimaryCtaHref: "",
   banners: [],
   categories: [],
-  featuredProductIds: [],
   colors: {
     primary: "#0f0f0f",
     secondary: "#5c5c5c",
