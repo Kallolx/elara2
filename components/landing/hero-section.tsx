@@ -6,6 +6,7 @@ import { FiImage } from "react-icons/fi";
 import { useStore } from "@/context/StoreContext";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
+import { motion } from "framer-motion";
 
 export function HeroSection() {
   const { settings, isLoaded } = useStore();
@@ -68,8 +69,11 @@ export function HeroSection() {
 
   return (
     <section className="mx-auto w-full max-w-7xl px-5 pt-4 sm:px-8 lg:px-10">
-      <div 
+      <motion.div 
         className="relative border border-line bg-surface rounded-xl sm:rounded-[2rem] overflow-hidden select-none group cursor-grab active:cursor-grabbing"
+        initial={{ opacity: 0, y: 25, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
       >
         <div className="overflow-hidden" ref={emblaRef}>
           <div className="flex touch-pan-y">
@@ -117,7 +121,7 @@ export function HeroSection() {
             ))}
           </div>
         )}
-      </div>
+      </motion.div>
     </section>
   );
 }

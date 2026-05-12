@@ -19,6 +19,16 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [redirectTarget, setRedirectTarget] = useState<string | null>(null);
+
+  // Safe hydration execution
+  useState(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const target = params.get("redirect");
+      if (target) setRedirectTarget(target);
+    }
+  });
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -28,7 +38,8 @@ export default function SignupPage() {
     try {
       const result = await signup(name, email, password, role);
       if (result.success) {
-        router.push("/admin/products");
+        // Dynamically route standard account creators back to source funnel
+        router.push(redirectTarget || "/admin/products");
       } else {
         setError(result.message);
       }
@@ -152,8 +163,11 @@ export default function SignupPage() {
 
           <div className="text-center text-xs tracking-[0.1em] text-text-soft pt-4 border-t border-line/50">
             <span>Already have an account? </span>
-            <Link href="/auth/signin" className="font-semibold text-accent hover:text-accent-deep transition-colors">
-              SIGN IN
+            <Link 
+              href={redirectTarget ? `/auth/signin?redirect=${encodeURIComponent(redirectTarget)}` : "/auth/signin"} 
+              className="font-semibold text-accent hover:text-accent-deep transition-colors uppercase"
+            >
+              Sign In
             </Link>
           </div>
         </div>

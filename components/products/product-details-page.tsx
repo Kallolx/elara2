@@ -35,6 +35,7 @@ import {
 } from "react-icons/fa";
 import { Button, ButtonLink } from "../ui/button";
 import { ProductCard } from "../landing/product-card";
+import { motion } from "framer-motion";
 import { featuredProducts, type ProductItem } from "../landing/products-data";
 
 type ProductDetailsPageProps = {
@@ -360,7 +361,13 @@ export function ProductDetailsPage({ product }: ProductDetailsPageProps) {
     <section className="px-5 py-8 sm:px-8 lg:px-10 lg:py-12">
       <div className="mx-auto w-full max-w-7xl">
         <div className="grid gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:gap-12">
-          <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+          {/* Left Image Block - Slides in from the Left */}
+          <motion.div 
+            className="space-y-4 lg:sticky lg:top-6 lg:self-start"
+            initial={{ opacity: 0, x: -35 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
+          >
             <div className="relative aspect-square overflow-hidden bg-surface-strong">
               <img
                 src={activeImage.src}
@@ -422,9 +429,15 @@ export function ProductDetailsPage({ product }: ProductDetailsPageProps) {
                 })}
               </div>
             )}
-          </div>
+          </motion.div>
 
-          <div className="space-y-10">
+          {/* Right Details Block - Slides in from the Right */}
+          <motion.div 
+            className="space-y-10"
+            initial={{ opacity: 0, x: 35 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.75, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          >
             <div className="space-y-6">
               <div>
                 <div className="flex items-center gap-2 text-sm font-medium text-text-soft/60">
@@ -747,7 +760,7 @@ export function ProductDetailsPage({ product }: ProductDetailsPageProps) {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* --- TABS SECTION --- */}

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { FiArrowLeft, FiSave } from "react-icons/fi";
+import { FiArrowLeft, FiSave, FiSearch, FiCheckSquare, FiSquare } from "react-icons/fi";
 
 export default function EditOfferPage() {
   const router = useRouter();
@@ -12,7 +12,16 @@ export default function EditOfferPage() {
   
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
+  
+  // Dynamic dataset structures
   const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [brands, setBrands] = useState<any[]>([]);
+  
+  // Active filtering parameters
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("ALL");
+  const [selectedBrand, setSelectedBrand] = useState("ALL");
   
   const [formData, setFormData] = useState({
     title: "",
@@ -27,24 +36,32 @@ export default function EditOfferPage() {
   });
 
   useEffect(() => {
-    // Fetch products and offer data
     const fetchData = async () => {
       try {
+        setFetching(true);
         const token = localStorage.getItem("elara_token");
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
         
-        // Fetch products
-        const prodRes = await fetch(`${baseUrl}/products`);
-        const prodJson = await prodRes.json();
-        if (prodJson.success) {
-          setProducts(prodJson.data);
-        }
-
-        // Fetch offer
-        const offerRes = await fetch(`${baseUrl}/offers/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const offerData = await offerRes.json();
+        // Fetch records in parallel
+        const [pRes, cRes, bRes, oRes] = await Promise.all([
+          fetch(`${baseUrl}/products`),
+          fetch(`${baseUrl}/categories`),
+          fetch(`${baseUrl}/brands`),
+          fetch(`${baseUrl}/offers/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+        ]);
+        
+        const [pJson, cJson, bJson] = await Promise.all([
+          pRes.json(), 
+          cRes.json(), 
+          bRes.json()
+        ]);
+        const offerData = await oRes.json();
+        
+        if (pJson.success) setProducts(pJson.data);
+        if (cJson.success) setCategories(cJson.data);
+        if (bJson.success) setBrands(bJson.data);
         
         if (offerData) {
           setFormData({
@@ -60,7 +77,7 @@ export default function EditOfferPage() {
           });
         }
       } catch (err) {
-        console.error("Failed to fetch data", err);
+        console.error("Failed hydrating campaign data:", err);
       } finally {
         setFetching(false);
       }
@@ -70,6 +87,21 @@ export default function EditOfferPage() {
       fetchData();
     }
   }, [id]);
+
+  // Live cache computation for UI searches
+  const filteredProducts = useMemo(() => {
+    return products.filter(p => {
+      const searchStr = searchQuery.trim().toLowerCase();
+      const matchSearch = !searchStr || 
+        p.name?.toLowerCase().includes(searchStr) ||
+        p.sku?.toLowerCase().includes(searchStr);
+      
+      const matchCat = selectedCategory === "ALL" || p.categoryId === selectedCategory;
+      const matchBrand = selectedBrand === "ALL" || p.brandId === selectedBrand;
+      
+      return matchSearch && matchCat && matchBrand;
+    });
+  }, [products, searchQuery, selectedCategory, selectedBrand]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target as HTMLInputElement;
@@ -91,6 +123,23 @@ export default function EditOfferPage() {
         return { ...prev, productIds: [...prev.productIds, productId] };
       }
     });
+  };
+
+  // Linkage utilities
+  const handleSelectAllFiltered = () => {
+    const ids = filteredProducts.map(p => p.id);
+    setFormData(prev => {
+      const newSet = new Set([...prev.productIds, ...ids]);
+      return { ...prev, productIds: Array.from(newSet) };
+    });
+  };
+
+  const handleDeselectAllFiltered = () => {
+    const idsToRemove = new Set(filteredProducts.map(p => p.id));
+    setFormData(prev => ({
+      ...prev,
+      productIds: prev.productIds.filter(id => !idsToRemove.has(id))
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -122,11 +171,11 @@ export default function EditOfferPage() {
   };
 
   if (fetching) {
-    return <div className="p-8 text-text-soft">Loading offer...</div>;
+    return <div className="p-8 text-sm text-text-soft animate-pulse">Loading configuration...</div>;
   }
 
   return (
-    <div className="max-w-4xl mx-auto pb-10">
+    <div className="max-w-5xl mx-auto pb-10">
       <div className="flex items-center gap-4 mb-6">
         <Link href="/admin/offers" className="p-2 border border-line bg-surface hover:bg-line transition-colors">
           <FiArrowLeft />
@@ -138,52 +187,52 @@ export default function EditOfferPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* General Information */}
-          <div className="p-6 border border-line bg-surface space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          {/* General Parameters */}
+          <div className="lg:col-span-5 p-6 border border-line bg-surface space-y-5 h-fit">
             <h3 className="font-semibold text-foreground border-b border-line pb-2 mb-4">General Information</h3>
             
             <div>
-              <label className="block text-xs font-medium text-text-soft mb-1.5 uppercase tracking-wider">Offer Title</label>
+              <label className="block text-xs font-semibold text-text-soft mb-1.5 uppercase tracking-wider">Offer Title</label>
               <input
                 type="text"
                 name="title"
                 required
                 value={formData.title}
                 onChange={handleChange}
-                placeholder="e.g. Summer Sale 2026"
-                className="w-full border border-line bg-background px-3 py-2 text-sm focus:border-accent focus:outline-none"
+                placeholder="Summer Sale"
+                className="w-full border border-line bg-background px-3 py-2 text-sm focus:border-accent focus:outline-none placeholder:text-text-soft/50"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-text-soft mb-1.5 uppercase tracking-wider">Coupon Code (Optional)</label>
+              <label className="block text-xs font-semibold text-text-soft mb-1.5 uppercase tracking-wider">Coupon Code (Optional)</label>
               <input
                 type="text"
                 name="code"
                 value={formData.code}
                 onChange={handleChange}
-                placeholder="e.g. SUMMER20 (Leave blank for direct product discount)"
-                className="w-full border border-line bg-background px-3 py-2 text-sm focus:border-accent focus:outline-none"
+                placeholder="SUMMER20"
+                className="w-full border border-line bg-background px-3 py-2 text-sm focus:border-accent focus:outline-none placeholder:text-text-soft/50 font-mono"
               />
-              <p className="text-[10px] text-text-soft mt-1">If a code is provided, users must enter it at checkout.</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-text-soft mb-1.5 uppercase tracking-wider">Discount Type</label>
+                <label className="block text-xs font-semibold text-text-soft mb-1.5 uppercase tracking-wider">Discount Type</label>
                 <select
                   name="discountType"
                   value={formData.discountType}
                   onChange={handleChange}
-                  className="w-full border border-line bg-background px-3 py-2 text-sm focus:border-accent focus:outline-none"
+                  className="w-full border border-line bg-background px-3 py-2 text-sm focus:border-accent focus:outline-none cursor-pointer"
                 >
                   <option value="PERCENTAGE">Percentage (%)</option>
                   <option value="FIXED">Fixed Amount (৳)</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-text-soft mb-1.5 uppercase tracking-wider">Discount Value</label>
+                <label className="block text-xs font-semibold text-text-soft mb-1.5 uppercase tracking-wider">Discount Value</label>
                 <input
                   type="number"
                   name="discountValue"
@@ -192,56 +241,54 @@ export default function EditOfferPage() {
                   step="0.01"
                   value={formData.discountValue}
                   onChange={handleChange}
-                  className="w-full border border-line bg-background px-3 py-2 text-sm focus:border-accent focus:outline-none"
+                  className="w-full border border-line bg-background px-3 py-2 text-sm focus:border-accent focus:outline-none font-bold"
                 />
               </div>
             </div>
 
-            <div className="pt-2">
+            <div className="pt-1">
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="checkbox"
                   name="isFlashSale"
                   checked={formData.isFlashSale}
                   onChange={handleChange}
-                  className="w-4 h-4 text-accent accent-accent"
+                  className="w-4 h-4 text-accent accent-accent cursor-pointer"
                 />
-                <span className="text-sm font-medium text-foreground">Flag as Flash Sale</span>
+                <span className="text-sm font-semibold text-foreground">Flag as Flash Sale</span>
               </label>
-              <p className="text-[10px] text-text-soft ml-7 mt-0.5">Products will get a special Flash Sale badge.</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-text-soft mb-1.5 uppercase tracking-wider">Start Date (Optional)</label>
+                <label className="block text-xs font-semibold text-text-soft mb-1.5 uppercase tracking-wider">Start Date (Optional)</label>
                 <input
                   type="date"
                   name="startDate"
                   value={formData.startDate}
                   onChange={handleChange}
-                  className="w-full border border-line bg-background px-3 py-2 text-sm focus:border-accent focus:outline-none"
+                  className="w-full border border-line bg-background px-3 py-2 text-sm focus:border-accent focus:outline-none text-text-soft"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-text-soft mb-1.5 uppercase tracking-wider">End Date (Optional)</label>
+                <label className="block text-xs font-semibold text-text-soft mb-1.5 uppercase tracking-wider">End Date (Optional)</label>
                 <input
                   type="date"
                   name="endDate"
                   value={formData.endDate}
                   onChange={handleChange}
-                  className="w-full border border-line bg-background px-3 py-2 text-sm focus:border-accent focus:outline-none"
+                  className="w-full border border-line bg-background px-3 py-2 text-sm focus:border-accent focus:outline-none text-text-soft"
                 />
-                <p className="text-[10px] text-text-soft mt-1">Offer disables automatically after this date.</p>
               </div>
             </div>
             
             <div>
-              <label className="block text-xs font-medium text-text-soft mb-1.5 uppercase tracking-wider">Status</label>
+              <label className="block text-xs font-semibold text-text-soft mb-1.5 uppercase tracking-wider">Status</label>
               <select
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className="w-full border border-line bg-background px-3 py-2 text-sm focus:border-accent focus:outline-none"
+                className="w-full border border-line bg-background px-3 py-2 text-sm focus:border-accent focus:outline-none cursor-pointer"
               >
                 <option value="ACTIVE">Active</option>
                 <option value="INACTIVE">Inactive</option>
@@ -249,36 +296,118 @@ export default function EditOfferPage() {
             </div>
           </div>
 
-          {/* Applicable Products */}
-          <div className="p-6 border border-line bg-surface flex flex-col h-[500px]">
-            <h3 className="font-semibold text-foreground border-b border-line pb-2 mb-4 shrink-0">
-              Apply to Products ({formData.productIds.length} selected)
-            </h3>
-            <p className="text-xs text-text-soft mb-3 shrink-0">Select the products this offer applies to.</p>
+          {/* Products Selection */}
+          <div className="lg:col-span-7 p-6 border border-line bg-surface flex flex-col h-[650px]">
+            <div className="flex items-center justify-between border-b border-line pb-3 mb-4 shrink-0">
+              <h3 className="font-semibold text-foreground">
+                Select Products
+              </h3>
+              <span className="text-xs font-bold bg-accent/10 border border-accent/20 text-accent px-2.5 py-0.5 rounded">
+                {formData.productIds.length} selected
+              </span>
+            </div>
             
-            <div className="flex-1 overflow-y-auto border border-line/50 p-2 space-y-1 scrollbar-thin">
-              {products.length === 0 ? (
-                <div className="p-4 text-center text-xs text-text-soft">Loading products...</div>
+            {/* UTILITY FILTER BLOCK */}
+            <div className="space-y-3 mb-4 shrink-0">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search product name or SKU..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full border border-line bg-background px-3 py-2 pl-9 text-xs focus:border-accent focus:outline-none"
+                />
+                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text-soft text-sm" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="border border-line bg-background px-2 py-1.5 text-xs focus:border-accent focus:outline-none cursor-pointer"
+                >
+                  <option value="ALL">All Categories</option>
+                  {categories.map((c: any) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+
+                <select
+                  value={selectedBrand}
+                  onChange={(e) => setSelectedBrand(e.target.value)}
+                  className="border border-line bg-background px-2 py-1.5 text-xs focus:border-accent focus:outline-none cursor-pointer"
+                >
+                  <option value="ALL">All Brands</option>
+                  {brands.map((b: any) => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-line/40">
+                <span className="text-[10px] text-text-soft font-semibold">
+                  {filteredProducts.length} items match criteria
+                </span>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleSelectAllFiltered}
+                    className="text-xs text-accent font-bold hover:underline flex items-center gap-1"
+                  >
+                    <FiCheckSquare /> Select Filtered
+                  </button>
+                  <div className="w-[1px] h-3 bg-line" />
+                  <button
+                    type="button"
+                    onClick={handleDeselectAllFiltered}
+                    className="text-xs text-red-500 font-bold hover:underline flex items-center gap-1"
+                  >
+                    <FiSquare /> Deselect Filtered
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            {/* DIRECT CLEAN LIST VIEW */}
+            <div className="flex-1 overflow-y-auto border border-line/50 bg-background p-1 divide-y divide-line/50 scrollbar-thin">
+              {filteredProducts.length === 0 ? (
+                <div className="p-8 text-center text-xs text-text-soft">No matching products found.</div>
               ) : (
-                products.map((p) => (
-                  <label key={p.id} className="flex items-center gap-3 p-2 hover:bg-background cursor-pointer rounded border border-transparent hover:border-line transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={formData.productIds.includes(p.id)}
-                      onChange={() => handleProductToggle(p.id)}
-                      className="w-4 h-4 text-accent accent-accent"
-                    />
-                    <div className="flex items-center gap-3 flex-1 overflow-hidden">
-                      <div className="w-8 h-8 bg-background shrink-0 flex items-center justify-center">
-                        <img src={p.image?.src || p.image || '/placeholder.jpg'} className="max-w-full max-h-full object-contain" alt="" />
+                filteredProducts.map((p) => {
+                  const isChecked = formData.productIds.includes(p.id);
+                  return (
+                    <label 
+                      key={p.id} 
+                      className={`flex items-center gap-4 p-3 hover:bg-surface-strong/20 cursor-pointer transition-colors ${
+                        isChecked ? "bg-accent/[0.02]" : ""
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => handleProductToggle(p.id)}
+                        className="w-4 h-4 text-accent accent-accent cursor-pointer shrink-0"
+                      />
+                      <div className="flex items-center gap-3 flex-1 overflow-hidden">
+                        <div className="w-9 h-9 bg-white border border-line shrink-0 flex items-center justify-center overflow-hidden">
+                          <img 
+                            src={p.image?.src || p.image || '/placeholder.jpg'} 
+                            className="max-w-full max-h-full object-contain" 
+                            alt="" 
+                          />
+                        </div>
+                        <div className="truncate flex-1">
+                          <p className="text-xs font-medium text-foreground truncate">{p.name}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[9px] font-mono font-bold text-text-soft">{p.sku || "NO-SKU"}</span>
+                            <span className="text-[9px] text-text-soft/70 uppercase">|</span>
+                            <span className="text-[9px] font-semibold text-text-soft/80 uppercase">{p.category?.name || "Uncategorized"}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="truncate">
-                        <p className="text-xs font-medium text-foreground truncate">{p.name}</p>
-                        <p className="text-[10px] text-text-soft truncate">{p.sku}</p>
-                      </div>
-                    </div>
-                  </label>
-                ))
+                    </label>
+                  );
+                })
               )}
             </div>
           </div>
@@ -288,7 +417,7 @@ export default function EditOfferPage() {
           <button
             type="submit"
             disabled={loading}
-            className="flex items-center gap-2 bg-foreground px-6 py-2.5 text-sm font-medium text-white hover:bg-foreground/90 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 bg-foreground px-6 py-2.5 text-sm font-medium text-white hover:bg-foreground/90 transition-colors disabled:opacity-50 shadow-sm"
           >
             <FiSave /> {loading ? "Saving..." : "Update Offer"}
           </button>

@@ -17,6 +17,29 @@ const sortOptions: Array<{ label: string; value: SortKey }> = [
   { label: "Price: High to Low", value: "price-desc" },
 ];
 
+// High-performance stagger matrix variants for core shop exploration
+const shopGridVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05, // ultra-rapid 50ms aesthetic ripple
+    },
+  },
+};
+
+const shopCardVariants = {
+  hidden: { opacity: 0, y: 16 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: [0.16, 1, 0.3, 1] as const,
+    },
+  },
+};
+
 export function ShopPage() {
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get("category");
@@ -550,14 +573,23 @@ export function ShopPage() {
           </div>
 
           {filteredProducts.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            /* Cascading Motion Matrix - Key forces layout replay on interactive filter mutations */
+            <motion.div 
+              className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
+              variants={shopGridVariants}
+              initial="hidden"
+              animate="show"
+              key={`${selectedCategoryId}-${selectedBrandId}-${selectedSubcategory}-${filteredProducts.length}-${sortKey}-${maxPrice}`}
+            >
               {filteredProducts.map((product) => (
-                <ProductCard
+                <motion.div
                   key={product.id || product.slug}
-                  product={product}
-                />
+                  variants={shopCardVariants}
+                >
+                  <ProductCard product={product} />
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           ) : (
             <div className="border border-line bg-surface px-6 py-12 text-center">
               <p className="text-lg font-semibold text-foreground">

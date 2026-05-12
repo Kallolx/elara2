@@ -41,7 +41,7 @@ type SavedAddress = {
 
 export default function CheckoutPage() {
   const { cartItems, cartSubtotal, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   // ---- Addresses Flow States ----
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
@@ -591,26 +591,36 @@ export default function CheckoutPage() {
                   </label>
 
                   {/* MAIN SUBMIT ACTION */}
-                  <Button
-                    onClick={handleSubmitOrder}
-                    disabled={isSubmitting || !selectedAddressId}
-                    className={`w-full py-4 font-bold text-base shadow-lg transition-all flex items-center justify-center gap-2${
-                      !selectedAddressId
-                        ? "bg-accent/50 text-text-soft cursor-not-allowed"
-                        : "bg-accent text-white hover:bg-black shadow-black/5"
-                    }`}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Placing Order...
-                      </>
-                    ) : (
-                      <>Confirm Order</>
-                    )}
-                  </Button>
+                  {!isAuthenticated ? (
+                    <ButtonLink
+                      href="/auth/signin?redirect=/checkout"
+                      className="w-full py-4 font-bold text-base shadow-lg transition-all flex items-center justify-center gap-2 bg-accent text-white hover:bg-black shadow-black/5"
+                    >
+                      <FiLock className="text-base shrink-0" />
+                      Login to Complete Order
+                    </ButtonLink>
+                  ) : (
+                    <Button
+                      onClick={handleSubmitOrder}
+                      disabled={isSubmitting || !selectedAddressId}
+                      className={`w-full py-4 font-bold text-base shadow-lg transition-all flex items-center justify-center gap-2 ${
+                        !selectedAddressId
+                          ? "bg-accent/50 text-text-soft cursor-not-allowed"
+                          : "bg-accent text-white hover:bg-black shadow-black/5"
+                      }`}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Placing Order...
+                        </>
+                      ) : (
+                        <>Confirm Order</>
+                      )}
+                    </Button>
+                  )}
 
-                  {!selectedAddressId && (
+                  {isAuthenticated && !selectedAddressId && (
                     <p className="text-[11px] text-center text-red-500 font-semibold flex items-center justify-center gap-1 mt-1">
                       <FiAlertCircle /> Please select an address above
                     </p>

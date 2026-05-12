@@ -4,163 +4,212 @@ import Image from "next/image";
 import {
   FiFacebook,
   FiInstagram,
-  FiTwitter,
   FiYoutube,
-  FiPhone,
-  FiMail,
+  FiRefreshCcw,
+  FiTruck,
+  FiFileText,
+  FiShield,
+  FiInfo,
+  FiPhoneCall,
+  FiUser,
+  FiHelpCircle,
 } from "react-icons/fi";
-import { FaWhatsapp } from "react-icons/fa";
+import { FaApple, FaGooglePlay, FaTiktok } from "react-icons/fa";
 import { useStore } from "@/context/StoreContext";
 
-const categoryLinks = [
-  { label: "Cleanser", href: "/shop?category=Cleanser" },
-  { label: "Moisturizer", href: "/shop?category=Moisturizer" },
-  { label: "Serum", href: "/shop?category=Serum" },
-  { label: "Sunscreen", href: "/shop?category=Sunscreen" },
-];
-const usefulLinks = [
-  { label: "Track Order", href: "/orders" },
-  { label: "Shipping & Delivery", href: "#" },
-  { label: "Returns & Refund", href: "#" },
-  { label: "Terms of Service", href: "#" },
-];
-const companyLinks = [
-  { label: "About Elara", href: "#" },
-  { label: "Contact Us", href: "#" },
-  { label: "Privacy Policy", href: "#" },
-  { label: "FAQs", href: "#" },
+const policyLinks = [
+  { label: "Return Policy", href: "#", icon: FiRefreshCcw },
+  { label: "Shipping Policy", href: "#", icon: FiTruck },
+  { label: "Terms & Conditions", href: "#", icon: FiFileText },
+  { label: "Privacy Policy", href: "#", icon: FiShield },
 ];
 
-const socialLinks = [
-  { label: "Instagram", icon: FiInstagram, href: "#" },
-  { label: "Facebook", icon: FiFacebook, href: "#" },
-  { label: "Twitter", icon: FiTwitter, href: "#" },
-  { label: "YouTube", icon: FiYoutube, href: "#" },
+const insightLinks = [
+  { label: "About Us", href: "#", icon: FiInfo },
+  { label: "Contact Us", href: "#", icon: FiPhoneCall },
+  { label: "My Account", href: "#", icon: FiUser },
+  { label: "FAQ", href: "#", icon: FiHelpCircle },
 ];
 
 export function SiteFooter() {
   const { settings } = useStore();
 
   return (
-    <footer id="contact" className="border-t border-line bg-[rgba(243,232,220,0.9)]">
-      <div className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-8 lg:px-10 lg:py-12">
-        <div className="grid gap-8 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-          <div className="col-span-2 md:col-span-3 lg:col-span-1 max-w-sm">
-            <span className="relative block h-10 w-36 overflow-hidden">
+    <footer className="relative overflow-hidden bg-gradient-to-br from-accent-deep via-accent to-[#DFB899] text-white">
+      {/* Floating Ambient Objects (Top Right & Left) */}
+      <div className="absolute top-12 right-24 w-20 h-24 sm:w-28 sm:h-32 bg-white/30 rounded-2xl rotate-12 blur-[2px] opacity-70 pointer-events-none z-0" />
+      <div className="absolute top-32 right-[30%] w-12 h-12 bg-white/20 rounded-full blur-[1px] opacity-60 pointer-events-none z-0" />
+      <div className="absolute top-40 left-10 w-16 h-20 bg-white/20 rounded-xl -rotate-12 blur-[3px] opacity-50 pointer-events-none z-0" />
+
+      {/* 1. TOP SECTION: FOOTER CONTENT */}
+      <div className="relative z-10 mx-auto max-w-7xl px-5 py-12 sm:px-8 lg:px-10 lg:pt-20">
+        <div className="flex flex-col lg:flex-row justify-between gap-12 lg:gap-8">
+          {/* LEFT COLUMN: Logo, About, Apps */}
+          <div className="max-w-md">
+            <span className="relative block h-14 w-44 overflow-hidden mb-8 filter brightness-0 invert opacity-95">
               <Image
                 src={settings.logo || "/logo.svg"}
                 alt={settings.logoAlt || "Elara"}
                 fill
                 className="object-contain object-left"
                 unoptimized
-                sizes="144px"
+                sizes="176px"
               />
             </span>
-            <p className="mt-3 text-sm leading-6 text-text-soft">
-              Curated skincare for refined results. Built to keep the product story compact,
-              clear, and easy to shop.
+            <p className="text-white/85 text-[15px] leading-relaxed mb-8 font-medium">
+              Elara Skincare Limited is Bangladesh's premium beauty e-commerce
+              company of high-end foreign Skincare Products. Inquiry: <br />
+              <a
+                href="mailto:support@elara.com"
+                className="font-bold text-white hover:text-white/80 transition-colors mt-1 inline-block"
+              >
+                support@elara.com
+              </a>
             </p>
 
-            <div className="mt-5 flex items-center gap-3">
-              {socialLinks.map(({ label, icon: Icon, href }) => (
-                <a
-                  key={label}
-                  href={href}
-                  aria-label={label}
-                  className="flex h-8 w-8 items-center justify-center border border-line bg-surface text-foreground transition-colors hover:border-accent/40 hover:bg-surface-strong rounded-full"
-                >
-                  <Icon className="text-[14px]" />
-                </a>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] font-bold text-foreground">Categories</p>
-            <ul className="mt-5 space-y-3 text-[13px] text-text-soft">
-              {categoryLinks.map((link) => (
-                <li key={link.label}>
-                  <a href={link.href} className="hover:text-accent transition-colors">
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] font-bold text-foreground">Useful Links</p>
-            <ul className="mt-5 space-y-3 text-[13px] text-text-soft">
-              {usefulLinks.map((link) => (
-                <li key={link.label}>
-                  <a href={link.href} className="hover:text-accent transition-colors">
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] font-bold text-foreground">Company</p>
-            <ul className="mt-5 space-y-3 text-[13px] text-text-soft">
-              {companyLinks.map((link) => (
-                <li key={link.label}>
-                  <a href={link.href} className="hover:text-accent transition-colors">
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] font-bold text-foreground">Contact Us</p>
-            <ul className="mt-5 space-y-3 text-[13px] text-text-soft">
-              <li>
-                <a href="tel:+8801234567890" className="flex items-center gap-2 hover:text-accent transition-colors">
-                  <FiPhone className="shrink-0" />
-                  +880 1234-567890
-                </a>
-              </li>
-              <li>
-                <a href="mailto:support@elara.com" className="flex items-center gap-2 hover:text-accent transition-colors">
-                  <FiMail className="shrink-0" />
-                  support@elara.com
-                </a>
-              </li>
-              <li className="pt-1">
-                <a 
-                  href="https://wa.me/8801234567890" 
-                  target="_blank" 
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 bg-[#25D366]/10 text-[#1f9c4b] px-3 py-1.5 rounded-md border border-[#25D366]/20 hover:bg-[#25D366] hover:text-white transition-all duration-300"
-                >
-                  <FaWhatsapp className="text-[16px]" />
-                  <span className="font-semibold tracking-tight">WhatsApp</span>
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="mt-12 pt-6 border-t border-line/60 flex flex-col items-center justify-center gap-4">
-          <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-text-soft/80">Secured Payments by</p>
-          <div className="w-full max-w-3xl mx-auto bg-white/60 backdrop-blur-sm p-2 rounded-xl border border-line/40 hover:bg-white/80 transition-all duration-500">
-            <img 
-              src="/payments.png" 
-              alt="Bangladeshi Payment Methods" 
-              className="w-full h-auto object-contain filter grayscale-[20%] opacity-85 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
+            {/* PAYMENT BAR */}
+            <img
+              src="/payments.jpeg"
+              alt="Secured Payment Methods"
+              className="w-full max-w-[400px] h-auto rounded-md object-contain mt-2 opacity-95"
             />
           </div>
+
+          {/* RIGHT COLUMN: Links, Socials & Payments */}
+          <div className="flex flex-col gap-4 lg:pt-4 w-full max-w-[600px]">
+            {/* Top Row: Policies/Insight Box + Social Pill */}
+            <div className="flex flex-col sm:flex-row gap-4 items-stretch w-full">
+              {/* Policies & Insight Container */}
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row flex-1 gap-6 sm:gap-10">
+                {/* POLICIES */}
+                <div className="flex-1">
+                  <p className="text-xl font-serif uppercase text-white/50 mb-6">
+                    Policies
+                  </p>
+                  <ul className="space-y-4 text-sm uppercase text-white/90 font-medium tracking-tight">
+                    {policyLinks.map((link) => (
+                      <li key={link.label}>
+                        <a
+                          href={link.href}
+                          className="group flex items-center gap-3 hover:text-white transition-colors"
+                        >
+                          <link.icon className="text-[18px] text-white/50 group-hover:text-white transition-colors" />
+                          {link.label}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Vertical Divider (becomes horizontal on mobile) */}
+                <div className="h-[1px] sm:h-auto w-full sm:w-[1px] bg-white/20 self-stretch rounded-full" />
+
+                {/* INSIGHT */}
+                <div className="flex-1">
+                  <p className="text-xl font-serif uppercase text-white/50 mb-6">
+                    Insight
+                  </p>
+                  <ul className="space-y-4 text-sm uppercase text-white/90 font-medium tracking-tight">
+                    {insightLinks.map((link) => (
+                      <li key={link.label}>
+                        <a
+                          href={link.href}
+                          className="group flex items-center gap-3 hover:text-white transition-colors"
+                        >
+                          <link.icon className="text-[18px] text-white/50 group-hover:text-white transition-colors" />
+                          {link.label}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* SOCIAL MEDIA PILL (stacks horizontally on mobile, vertically on desktop) */}
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl py-4 sm:py-6 px-6 sm:px-4 flex flex-row sm:flex-col gap-8 sm:gap-6 items-center justify-center shrink-0 w-full sm:w-[70px]">
+                <a
+                  href="#"
+                  aria-label="Facebook"
+                  className="text-white hover:scale-110 transition-transform"
+                >
+                  <FiFacebook className="text-[22px]" />
+                </a>
+                <a
+                  href="#"
+                  aria-label="Tiktok"
+                  className="text-white hover:scale-110 transition-transform"
+                >
+                  <FaTiktok className="text-[22px]" />
+                </a>
+                <a
+                  href="#"
+                  aria-label="Youtube"
+                  className="text-white hover:scale-110 transition-transform"
+                >
+                  <FiYoutube className="text-[22px]" />
+                </a>
+                <a
+                  href="#"
+                  aria-label="Instagram"
+                  className="text-white hover:scale-110 transition-transform"
+                >
+                  <FiInstagram className="text-[22px]" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. MIDDLE SECTION: COPYRIGHT SEPARATOR */}
+      <div className="relative z-20 border-t border-white/20 py-5">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10 flex flex-col md:flex-row items-center justify-between gap-4 text-[13px] text-white/60 font-normal tracking-wide">
+          <p>Copyright © 2026 Elara Skincare Limited.</p>
+          <p>
+            Design & Developed by{" "}
+            <a
+              href="https://kallol.me"
+              target="_blank"
+              rel="noreferrer"
+              className="text-white/70 hover:text-white transition-all"
+            >
+              Kamrul hasan
+            </a>
+          </p>
+        </div>
+      </div>
+
+      {/* 3. BOTTOM SECTION: LOGO AND PRODUCTS SHOWCASE */}
+      <div className="relative w-full h-[220px] md:h-[350px] lg:h-[450px] overflow-hidden flex items-end justify-center pointer-events-none">
+        {/* Center Background Logo */}
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[150vw] sm:w-[120vw] max-w-[1400px] h-full flex justify-center opacity-[0.5] filter brightness-0 invert select-none">
+          <img
+            src="/footer-logo.png"
+            alt="Background Logo"
+            className="object-contain object-bottom translate-y-[15%]"
+          />
         </div>
 
-        <div className="mt-6 flex flex-col gap-3 border-t border-line pt-5 text-xs uppercase tracking-[0.24em] text-text-soft sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 Elara. All rights reserved.</p>
-          <a href="#top" className="hidden sm:block hover:text-foreground">
-            Back to top
-          </a>
+        {/* Left Lined Up Products */}
+        <div className="absolute bottom-0 left-0 opacity-100 z-10 w-[240px] md:w-[380px] xl:w-[480px] translate-y-[20%]">
+          <img
+            src="/footer-product-group-2.webp"
+            alt="Elara Products Left"
+            className="w-full h-auto object-contain object-bottom drop-shadow-[0_20px_40px_rgba(0,0,0,0.4)] relative z-0"
+          />
         </div>
+
+        {/* Right Lined Up Products */}
+        <div className="absolute bottom-0 right-0 opacity-100 z-10 w-[240px] md:w-[380px] xl:w-[480px] translate-y-[20%]">
+          <img
+            src="/footer-product-group-1.webp"
+            alt="Elara Products Right"
+            className="w-full h-auto object-contain object-bottom drop-shadow-[0_20px_40px_rgba(0,0,0,0.4)] relative z-0"
+          />
+        </div>
+
+        {/* Unified Bottom Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-accent/70 to-transparent z-20 pointer-events-none" />
       </div>
     </footer>
   );

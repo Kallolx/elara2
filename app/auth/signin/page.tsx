@@ -17,6 +17,16 @@ export default function SigninPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [redirectTarget, setRedirectTarget] = useState<string | null>(null);
+
+  // Hydrate redirect targets safely to prevent hydration mismatch constraints
+  useState(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const target = urlParams.get("redirect");
+      if (target) setRedirectTarget(target);
+    }
+  });
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -26,7 +36,8 @@ export default function SigninPage() {
     try {
       const result = await login(email, password);
       if (result.success) {
-        router.push("/admin/products");
+        // Use the verified redirect target, fallback to standard dashboard
+        router.push(redirectTarget || "/admin/products");
       } else {
         setError(result.message);
       }
@@ -129,8 +140,11 @@ export default function SigninPage() {
 
           <div className="text-center text-xs tracking-[0.1em] text-text-soft pt-4 border-t border-line/50">
             <span>Don't have an account? </span>
-            <Link href="/auth/signup" className="font-semibold text-accent hover:text-accent-deep transition-colors">
-              SIGN UP
+            <Link 
+              href={redirectTarget ? `/auth/signup?redirect=${encodeURIComponent(redirectTarget)}` : "/auth/signup"} 
+              className="font-semibold text-accent hover:text-accent-deep transition-colors uppercase"
+            >
+              Sign Up
             </Link>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { StoreProvider } from "@/context/StoreContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 import { CartDrawer } from "@/components/cart/cart-drawer";
+import SmoothScrollProvider from "@/components/ui/smooth-scroll";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -25,15 +26,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${outfit.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
-        <AuthProvider>
-          <StoreProvider>
-            <CartProvider>
-              {children}
-              <CartDrawer />
-            </CartProvider>
-          </StoreProvider>
-        </AuthProvider>
+      <body className="min-h-full flex flex-col overflow-x-hidden relative">
+        <SmoothScrollProvider>
+          <AuthProvider>
+            <StoreProvider>
+              <CartProvider>
+                {children}
+                <CartDrawer />
+              </CartProvider>
+            </StoreProvider>
+          </AuthProvider>
+        </SmoothScrollProvider>
       </body>
     </html>
   );

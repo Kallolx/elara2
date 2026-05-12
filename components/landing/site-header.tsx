@@ -20,6 +20,7 @@ import { useStore } from "@/context/StoreContext";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { getCategoryIconPath } from "@/components/admin/categories-data";
+import { motion } from "framer-motion";
 
 interface Category {
   id: string;
@@ -169,7 +170,12 @@ export function SiteHeader() {
   return (
     <header className="bg-background border-b-1 border-line sticky top-0 z-50 flex flex-col">
       {/* SINGLE NAVIGATION ROW */}
-      <div className="mx-auto relative flex h-16 sm:h-20 w-full max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-10">
+      <motion.div 
+        className="mx-auto relative flex h-16 sm:h-20 w-full max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-10"
+        initial={{ opacity: 0, y: -15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      >
         {/* 1. Brand Logo (Pinned Left) */}
         <Link
           href="/"
@@ -506,7 +512,7 @@ export function SiteHeader() {
             <FiMenu className="text-[18px]" />
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* SIDE NAVIGATION DRAWER */}
       <div

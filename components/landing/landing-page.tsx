@@ -5,14 +5,14 @@ import { SocialMediaSection } from "./social-media-section";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
 import { ShopByConcernSection } from "./shop-by-concern-section";
-
+import { OffersSection } from "./offers-section";
 import { PromoBannerSection } from "./promo-banner";
 
 export function LandingPage() {
   return (
     <div className="min-h-screen text-foreground relative bg-background">
       {/* Fixed Side Backgrounds (Watercolor Leaves branching inwards from the edges) */}
-      <div 
+      <div
         className="fixed left-0 top-0 bottom-0 w-[100px] pointer-events-none z-0 hidden xl:block opacity-20 select-none"
         style={{
           backgroundImage: "url('/bg.png')",
@@ -21,7 +21,7 @@ export function LandingPage() {
           backgroundPosition: "left top",
         }}
       />
-      <div 
+      <div
         className="fixed right-0 top-0 bottom-0 w-[100px] pointer-events-none z-0 hidden xl:block opacity-20 select-none"
         style={{
           backgroundImage: "url('/bg.png')",
@@ -38,6 +38,7 @@ export function LandingPage() {
           <HeroSection />
           <CategoriesSection />
           <ShopByConcernSection />
+          <OffersSection />
           <ProductsSection />
           <PromoBannerSection />
           <SocialMediaSection />

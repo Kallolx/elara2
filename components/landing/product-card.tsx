@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { KeyboardEvent } from "react";
-import { FiPlus, FiShoppingCart, FiStar, FiHeart } from "react-icons/fi";
+import { FiPlus, FiShoppingCart, FiStar, FiHeart, FiZap } from "react-icons/fi";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { HiOutlineShoppingBag, HiShoppingBag } from "react-icons/hi";
@@ -29,7 +29,6 @@ type ProductCardProps = {
     }>;
   };
 };
-
 
 export function ProductCard({ product }: ProductCardProps) {
   const router = useRouter();
@@ -60,39 +59,42 @@ export function ProductCard({ product }: ProductCardProps) {
 
   if (product.offers && product.offers.length > 0) {
     const activeOffer = product.offers.find((o: any) => {
-      if (o.status !== 'ACTIVE' || o.code) return false;
-      
+      if (o.status !== "ACTIVE" || o.code) return false;
+
       const now = new Date();
       now.setHours(0, 0, 0, 0);
-      
+
       if (o.startDate) {
         const start = new Date(o.startDate);
         start.setHours(0, 0, 0, 0);
         if (start > now) return false;
       }
-      
+
       if (o.endDate) {
         const end = new Date(o.endDate);
         end.setHours(0, 0, 0, 0);
         if (end < now) return false;
       }
-      
+
       return true;
     });
-    
+
     if (activeOffer) {
       isFlashSale = activeOffer.isFlashSale || false;
       const originalPrice = baseOldPrice || basePrice;
       displayOldPrice = originalPrice;
-      
-      if (activeOffer.discountType === 'PERCENTAGE') {
-        displayPrice = originalPrice - (originalPrice * (activeOffer.discountValue / 100));
+
+      if (activeOffer.discountType === "PERCENTAGE") {
+        displayPrice =
+          originalPrice - originalPrice * (activeOffer.discountValue / 100);
         discountPercentage = activeOffer.discountValue;
       } else {
         displayPrice = originalPrice - activeOffer.discountValue;
-        discountPercentage = Math.round(((originalPrice - displayPrice) / originalPrice) * 100);
+        discountPercentage = Math.round(
+          ((originalPrice - displayPrice) / originalPrice) * 100,
+        );
       }
-      
+
       if (displayPrice < 0) displayPrice = 0;
       displayPrice = Math.round(displayPrice); // Ensure clean numbers
     }
@@ -157,9 +159,15 @@ export function ProductCard({ product }: ProductCardProps) {
         ) : null}
 
         {isFlashSale && !product.isOutOfStock && (
-          <span className="absolute left-1 top-8 z-20 flex items-center gap-1 bg-red-600/90 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white rounded-full shadow-sm">
-            Flash Sale
-          </span>
+          <div className="absolute left-3 top-12 z-20">
+            <span className="flex items-center gap-1 bg-red-600/90 backdrop-blur-sm px-2.5 py-1 text-[12px] font-medium text-white rounded-full shadow-sm">
+              <FiZap
+                className="w-3 h-3 text-yellow-500"
+                fill="currentColor"
+              />
+              Flash Sale
+            </span>
+          </div>
         )}
 
         {product.isOutOfStock && (
@@ -181,7 +189,7 @@ export function ProductCard({ product }: ProductCardProps) {
               await toggleWishlist(product.id);
             }
           }}
-          className="absolute right-1 top-1 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-white/80 backdrop-blur-md transition-transform hover:scale-110 shadow-sm"
+          className="absolute right-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-white/80 backdrop-blur-md transition-transform hover:scale-110 shadow-sm"
           aria-label={
             user?.wishlistIds?.includes(product.id || "")
               ? "Remove from wishlist"
@@ -203,7 +211,9 @@ export function ProductCard({ product }: ProductCardProps) {
               src={imageSrc}
               alt={imageAlt}
               className={`absolute inset-0 h-full w-full object-cover transition-all duration-500 ${
-                product.isOutOfStock ? "grayscale opacity-70 group-hover:scale-105" : "group-hover:scale-105"
+                product.isOutOfStock
+                  ? "grayscale opacity-70 group-hover:scale-105"
+                  : "group-hover:scale-105"
               }`}
             />
           </div>
@@ -216,18 +226,15 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="mb-2 font-medium flex items-center">
           {(product.reviewCount || 0) > 0 ? (
             <span className="text-sm text-green-600">
-              {product.reviewCount} {product.reviewCount === 1 ? 'Review' : 'Reviews'}
+              {product.reviewCount}{" "}
+              {product.reviewCount === 1 ? "Review" : "Reviews"}
             </span>
           ) : (
-            <span className="text-sm text-green-600">
-              0 Reviews
-            </span>
+            <span className="text-sm text-green-600">0 Reviews</span>
           )}
         </div>
 
-        <h3
-          className="font-sans font-medium text-foreground mb-1.5 text-lg sm:text-xl leading-tight line-clamp-2 min-h-[2.6em]"
-        >
+        <h3 className="font-sans font-medium text-foreground mb-1.5 text-lg sm:text-xl leading-tight line-clamp-2 min-h-[2.6em]">
           {product.name}
         </h3>
       </div>
@@ -245,10 +252,12 @@ export function ProductCard({ product }: ProductCardProps) {
               </p>
             )}
           </div>
-          
+
           {product.isOutOfStock ? (
             <div className="flex h-8 px-2.5 shrink-0 items-center justify-center bg-stone-100 text-stone-500 rounded-full border border-stone-200/60 cursor-not-allowed">
-              <span className="text-[9px] font-bold uppercase tracking-widest">Sold Out</span>
+              <span className="text-[9px] font-bold uppercase tracking-widest">
+                Sold Out
+              </span>
             </div>
           ) : (
             <button

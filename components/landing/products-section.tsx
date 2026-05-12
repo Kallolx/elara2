@@ -7,6 +7,29 @@ import Link from "next/link";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { motion } from "framer-motion";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, x: 45 }, // Kinetic Slide-in from the Right
+  show: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.6,
+      ease: [0.16, 1, 0.3, 1] as const,
+    },
+  },
+};
 
 export function ProductsSection() {
   const [products, setProducts] = useState<any[]>([]);
@@ -90,7 +113,13 @@ export function ProductsSection() {
       id="shop"
       className="mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-10"
     >
-      <div className="mb-6 flex flex-col items-center justify-between sm:flex-row sm:text-left">
+      <motion.div 
+        className="mb-6 flex flex-col items-center justify-between sm:flex-row sm:text-left"
+        initial={{ opacity: 0, y: 15 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+      >
         <div>
           <h2 className="text-3xl font-serif text-text sm:text-4xl">
             Recent Arrivals
@@ -114,22 +143,29 @@ export function ProductsSection() {
             <FiChevronRight className="text-xl" />
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Slider Viewport */}
       <div className="overflow-hidden" ref={emblaRef}>
-        <div className="flex -ml-4 touch-pan-y">
+        <motion.div 
+          className="flex -ml-4 touch-pan-y"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-40px" }}
+        >
           {products.map((product) => (
-            <div
+            <motion.div
               key={product.id || product.slug}
+              variants={itemVariants}
               className="min-w-0 pl-4 flex-[0_0_75%] sm:flex-[0_0_45%] md:flex-[0_0_33.333%] lg:flex-[0_0_25%]"
             >
               <div className="h-full py-2">
                 <ProductCard product={product} />
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
 
       {/* Mobile Navigation arrows */}

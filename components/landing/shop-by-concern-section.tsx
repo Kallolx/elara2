@@ -6,6 +6,29 @@ import Link from "next/link";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
+import { motion } from "framer-motion";
+
+const concernContainerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const concernItemVariants = {
+  hidden: { opacity: 0, y: 35 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: [0.16, 1, 0.3, 1] as const,
+    },
+  },
+};
 
 const concerns = [
   {
@@ -73,16 +96,29 @@ export function ShopByConcernSection() {
 
   return (
     <section className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-8 lg:px-10">
-      <div className="mb-10 flex flex-col items-center text-center">
+      <motion.div 
+        className="mb-10 flex flex-col items-center text-center"
+        initial={{ opacity: 0, y: 15 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5 }}
+      >
         <h2 className="text-3xl font-serif text-text sm:text-4xl">Shop by Concern</h2>
-      </div>
+      </motion.div>
 
       <div className="group/arrows relative">
         <div className="overflow-hidden" ref={emblaRef}>
-          <div className="flex -ml-4 touch-pan-y">
+          <motion.div 
+            className="flex -ml-4 touch-pan-y"
+            variants={concernContainerVariants}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-40px" }}
+          >
             {concerns.map((concern) => (
-              <div
+              <motion.div
                 key={concern.id}
+                variants={concernItemVariants}
                 className="min-w-0 pl-4 flex-[0_0_75%] sm:flex-[0_0_45%] md:flex-[0_0_33.333%] lg:flex-[0_0_25%]"
               >
                 <Link href={concern.link} className="group block h-full">
@@ -105,9 +141,9 @@ export function ShopByConcernSection() {
                     </div>
                   </div>
                 </Link>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
 
       </div>

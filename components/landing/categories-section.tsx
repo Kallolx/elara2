@@ -2,6 +2,29 @@
 
 import { useEffect, useState } from "react";
 import { getCategoryIconPath } from "@/components/admin/categories-data";
+import { motion } from "framer-motion";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.07,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 25 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: [0.16, 1, 0.3, 1] as const,
+    },
+  },
+};
 
 interface Category {
   id: string;
@@ -72,18 +95,31 @@ export function CategoriesSection() {
       id="categories"
       className="mx-auto w-full max-w-7xl px-5 py-4 sm:px-8 lg:px-10 pb-8"
     >
-      <div className="mb-8 text-center pt-4">
+      <motion.div 
+        className="mb-8 text-center pt-4"
+        initial={{ opacity: 0, y: 15 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-60px" }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
         <h2 className="text-3xl font-serif text-text sm:text-4xl">
           Categories
         </h2>
-      </div>
+      </motion.div>
 
       {/* Centered Dynamic Row Layout - preserving original brand borders & colors */}
-      <div className="flex flex-wrap justify-center gap-4">
+      <motion.div 
+        className="flex flex-wrap justify-center gap-4"
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, margin: "-60px" }}
+      >
         {categories.map((category) => {
           return (
-            <a
+            <motion.a
               key={category.id}
+              variants={itemVariants}
               href={`/shop?category=${category.id}`}
               className="group flex h-[140px] w-[150px] shrink-0 flex-col rounded-lg items-center justify-center border border-line bg-surface px-4 py-4 text-center transition-all hover:bg-surface-strong hover:-translate-y-0.5 duration-300"
               aria-label={`Browse ${category.name}`}
@@ -98,10 +134,10 @@ export function CategoriesSection() {
               <span className="text-md font-medium text-foreground text-center truncate w-full px-1">
                 {category.name}
               </span>
-            </a>
+            </motion.a>
           );
         })}
-      </div>
+      </motion.div>
     </section>
   );
 }

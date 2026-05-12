@@ -1,0 +1,87 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
+import Lenis from "lenis";
+
+export default function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
+  const lenisRef = useRef<Lenis | null>(null);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    // ADMIN ROUTE EXEMPTION: Shield administrative grids and tables from virtual scroll systems
+    if (pathname?.startsWith("/admin")) {
+      document.documentElement.style.scrollBehavior = "auto";
+      return;
+    }
+
+    // INITIALIZE: Construct a fresh context for this specific route to prevent cached-height locking
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: true,
+      wheelMultiplier: 1.05,
+    });
+
+    lenisRef.current = lenis;
+
+    // INSTANT HARD RESET: Immediately force viewport to the physical top coordinate on page mount
+    lenis.scrollTo(0, { immediate: true });
+    window.scrollTo(0, 0);
+
+    // COORDINATE: Start smooth engine raf loops
+    let rafId: number;
+    function raf(time: number) {
+      lenis.raf(time);
+      rafId = requestAnimationFrame(raf);
+    }
+    rafId = requestAnimationFrame(raf);
+
+    // HYDRATION DELAY: Force a deep resize recalculation after browser paints new DOM content
+    const resizeTimer = setTimeout(() => {
+      lenis.resize();
+    }, 150);
+
+    // DECONSTRUCT: Cleanly dismantle listeners and remove styling classes to avoid freezing the viewport
+    return () => {
+      clearTimeout(resizeTimer);
+      cancelAnimationFrame(rafId);
+      lenis.destroy();
+      lenisRef.current = null;
+      
+      // Purge absolute system variables to ensure standard browser scroll takes back over instantly
+      document.documentElement.classList.remove('lenis', 'lenis-smooth', 'lenis-scrolling', 'lenis-stopped');
+      document.documentElement.style.scrollBehavior = "auto";
+    };
+  }, [pathname]); // Crucial: Triggers exact height calculations and resets whenever path shifts
+
+  return (
+    <>
+      {/* Raw globally injected styles handle structural layout resets for Lenis constraints */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            html.lenis, html.lenis-scrolling {
+              scroll-behavior: auto !important;
+            }
+            .lenis.lenis-smooth {
+              scroll-behavior: auto !important;
+            }
+            .lenis.lenis-smooth [data-lenis-prevent] {
+              overscroll-behavior: contain;
+            }
+            .lenis.lenis-stopped {
+              overflow: hidden !important;
+            }
+            .lenis.lenis-scrolling iframe {
+              pointer-events: none;
+            }
+          `
+        }}
+      />
+      {children}
+    </>
+  );
+}
