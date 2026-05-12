@@ -100,7 +100,7 @@ export default function AdminOrdersPage() {
   return (
     <div className="space-y-6">
       <article className="border border-line bg-surface">
-        <div className="flex items-center justify-between border-b border-line px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-line px-4 py-4">
           <div>
             <h2 className="mt-2 text-xl font-semibold tracking-[-0.03em] text-foreground">
               Manage orders and payments

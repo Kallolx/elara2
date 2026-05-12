@@ -181,7 +181,7 @@ export default function AdminProductsPage() {
   return (
     <div className="space-y-6">
       <article className="border border-line bg-surface">
-        <div className="flex items-center justify-between border-b border-line px-5 py-4 bg-surface-strong/30">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-line px-4 py-4 bg-surface-strong/30">
           <div>
             <h2 className="mt-2 text-xl font-semibold tracking-[-0.03em] text-foreground">
               Manage products and sizes
@@ -215,7 +215,7 @@ export default function AdminProductsPage() {
         </div>
 
         {/* Filters Bar */}
-        <div className="flex flex-wrap items-center gap-3 border-b border-line px-5 py-3 bg-surface text-sm">
+        <div className="flex flex-wrap items-center gap-3 border-b border-line px-4 py-3 bg-surface text-sm">
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}

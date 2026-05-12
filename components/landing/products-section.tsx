@@ -18,18 +18,30 @@ export function ProductsSection() {
       containScroll: "trimSnaps",
       loop: true,
     },
-    [Autoplay({ delay: 3500, stopOnInteraction: false, stopOnMouseEnter: true })]
+    [
+      Autoplay({
+        delay: 3500,
+        stopOnInteraction: false,
+        stopOnMouseEnter: true,
+      }),
+    ],
   );
 
-  const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
-  const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
+  const scrollPrev = useCallback(
+    () => emblaApi && emblaApi.scrollPrev(),
+    [emblaApi],
+  );
+  const scrollNext = useCallback(
+    () => emblaApi && emblaApi.scrollNext(),
+    [emblaApi],
+  );
 
   useEffect(() => {
     const loadRecentProducts = async () => {
       try {
         const apiBase =
           process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-        
+
         // Directly fetch list of all products
         const res = await fetch(`${apiBase}/products`);
         const json = await res.json();
@@ -37,9 +49,11 @@ export function ProductsSection() {
         if (json.success && Array.isArray(json.data)) {
           // 1. Force sort descending by most recently created
           const sorted = [...json.data].sort((a: any, b: any) => {
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            return (
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
           });
-          
+
           // 2. Slice top 20 items exactly as requested
           setProducts(sorted.slice(0, 20));
         }
@@ -74,14 +88,13 @@ export function ProductsSection() {
   return (
     <section
       id="shop"
-      className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-8 lg:px-10"
+      className="mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-10"
     >
-      <div className="mb-10 flex flex-col items-center justify-between sm:flex-row sm:text-left">
+      <div className="mb-6 flex flex-col items-center justify-between sm:flex-row sm:text-left">
         <div>
           <h2 className="text-3xl font-serif text-text sm:text-4xl">
             Recent Arrivals
           </h2>
-          <p className="mt-2 text-text-soft">Fresh drops curated for everyday skin.</p>
         </div>
 
         {/* Navigation Arrows Inline Desktop, Bottom on Mobile */}
@@ -135,12 +148,12 @@ export function ProductsSection() {
         </button>
       </div>
 
-      <div className="mt-16 flex justify-center">
+      <div className="mt-8 flex justify-center">
         <Link
           href="/shop"
           className="inline-flex h-12 items-center justify-center rounded-full border border-line px-10 text-sm font-medium text-text transition-all duration-300 hover:bg-text hover:text-background hover:border-text"
         >
-          Explore Entire Collection
+          Explore Collection
         </Link>
       </div>
     </section>

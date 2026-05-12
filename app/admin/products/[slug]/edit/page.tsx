@@ -138,7 +138,7 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
           } else {
             setGalleryUrls([]);
           }
-          setHowToUseRows(prod.howToUse && prod.howToUse.length > 0 ? prod.howToUse : [""]);
+          setHowToUseRows(prod.howToUse || []);
 
           if (prod.offers && prod.offers.length > 0) {
             setActiveOffers(prod.offers);
@@ -399,7 +399,7 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
               <input
                 type="number"
                 step="0.1"
-                min="1"
+                min="0"
                 max="5"
                 value={rating}
                 onChange={(e) => setRating(e.target.value)}
@@ -518,7 +518,6 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
                   {index + 1}.
                 </span>
                 <input
-                  required
                   value={value}
                   onChange={(event) =>
                     setHowToUseRows((current) =>
@@ -535,9 +534,7 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
                   size="sm"
                   onClick={() =>
                     setHowToUseRows((current) =>
-                      current.length > 1
-                        ? current.filter((_, idx) => idx !== index)
-                        : current,
+                      current.filter((_, idx) => idx !== index),
                     )
                   }
                 >

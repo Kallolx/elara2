@@ -67,7 +67,7 @@ export default function AdminProductCreatePage() {
   const [sizeRows, setSizeRows] = useState<SizeRow[]>([
     { size: "", unit: "ml", price: "", oldPrice: "" },
   ]);
-  const [howToUseRows, setHowToUseRows] = useState<string[]>([""]);
+  const [howToUseRows, setHowToUseRows] = useState<string[]>([]);
   const [reviewRows, setReviewRows] = useState<ReviewRow[]>([]);
   
   const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
@@ -292,7 +292,7 @@ export default function AdminProductCreatePage() {
               <input
                 type="number"
                 step="0.1"
-                min="1"
+                min="0"
                 max="5"
                 value={rating}
                 onChange={(e) => setRating(e.target.value)}
@@ -423,7 +423,6 @@ export default function AdminProductCreatePage() {
                   {index + 1}.
                 </span>
                 <input
-                  required
                   value={value}
                   onChange={(event) =>
                     setHowToUseRows((current) =>
@@ -441,9 +440,7 @@ export default function AdminProductCreatePage() {
                   size="sm"
                   onClick={() =>
                     setHowToUseRows((current) =>
-                      current.length > 1
-                        ? current.filter((_, idx) => idx !== index)
-                        : current,
+                      current.filter((_, idx) => idx !== index),
                     )
                   }
                 >
@@ -729,7 +726,7 @@ export default function AdminProductCreatePage() {
                   <input
                     required
                     type="number"
-                    min="1"
+                    min="0"
                     max="5"
                     step="0.1"
                     value={review.rating}

@@ -41,12 +41,14 @@ export default function KobaSourcingPage() {
   const [targetUrl, setTargetUrl] = useState(
     "https://www.kobareseller.com/dashboard/products",
   );
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [products, setProducts] = useState<ScrapedProduct[]>([]);
   const [loading, setLoading] = useState(false);
   const [syncLoading, setSyncLoading] = useState(false);
+  const [maxPages, setMaxPages] = useState(1);
   const [importingMap, setImportingMap] = useState<
     Record<string, "idle" | "loading" | "success">
   >({});
@@ -95,7 +97,10 @@ export default function KobaSourcingPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ url: urlToScrape }),
+        body: JSON.stringify({ 
+          url: urlToScrape,
+          maxPages: maxPages 
+        }),
       });
       const data = await res.json();
 
@@ -125,6 +130,14 @@ export default function KobaSourcingPage() {
   const handleScrape = async (e: React.FormEvent) => {
     e.preventDefault();
     await scrapeProducts(targetUrl);
+  };
+
+  const handleSearchSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    const searchUrl = `https://www.kobareseller.com/dashboard/products?product=${encodeURIComponent(searchQuery.trim())}`;
+    setCurrentPage(1);
+    await scrapeProducts(searchUrl);
   };
 
   const handlePageChange = async (newPage: number) => {
@@ -289,19 +302,50 @@ export default function KobaSourcingPage() {
       </header>
 
       {/* Scraper Inputs & DB Category Selector Cards */}
-      <div className="grid gap-6 md:grid-cols-3 mb-8">
+      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3 mb-8">
+        {/* Dedicated Quick Search Form */}
+        <div className="border border-stone-200 bg-white p-4 space-y-4 rounded-sm shadow-sm">
+          <div className="flex flex-col h-full justify-between space-y-4">
+            <div>
+              <h2 className="text-lg uppercase tracking-wider font-bold text-foreground flex items-center gap-2">
+                <FiSearch /> Quick Search
+              </h2>
+            </div>
+
+            <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Enter name or SKU..."
+                className="flex-1 border border-stone-200 px-4 py-3 text-sm text-foreground outline-none transition-colors focus:border-accent bg-stone-50"
+              />
+              <button
+                type="submit"
+                disabled={loading || !searchQuery.trim()}
+                className="bg-slate-900 hover:bg-black text-white text-[10px] uppercase tracking-wider font-bold px-5 py-3.5 rounded-sm disabled:opacity-50 transition-colors"
+              >
+                Search
+              </button>
+            </form>
+          </div>
+        </div>
+
         {/* Scraper Parameters Form */}
         <form
           onSubmit={handleScrape}
-          className="md:col-span-2 border border-stone-200 bg-white p-2 sm:p-4 space-y-4 rounded-sm shadow-sm"
+          className="md:col-span-1 border border-stone-200 bg-white p-4 space-y-4 rounded-sm shadow-sm flex flex-col justify-between"
         >
           <div>
-            <h2 className="text-sm uppercase tracking-wider font-bold text-foreground">
-              Koba URL
+            <h2 className="text-sm uppercase tracking-wider font-bold text-foreground flex items-center gap-2">
+              <FiExternalLink /> Direct URL
             </h2>
+            <p className="text-[10px] text-stone-400 mt-0.5">
+              Scrape from a custom dashboard page URL.
+            </p>
           </div>
 
-          <div className="">
+          <div className="space-y-3">
             <input
               id="koba-url"
               type="url"
@@ -309,58 +353,76 @@ export default function KobaSourcingPage() {
               value={targetUrl}
               onChange={(e) => setTargetUrl(e.target.value)}
               placeholder="https://www.kobareseller.com/dashboard/products"
-              className="block w-full border border-stone-200 px-4 py-3 text-sm text-foreground outline-none transition-colors focus:border-accent"
+              className="block w-full border border-stone-200 px-4 py-3 text-xs text-foreground outline-none transition-colors focus:border-accent"
             />
-          </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full border border-accent bg-accent px-5 py-3 text-xs uppercase tracking-widest font-bold text-white hover:bg-accent-deep transition-colors cursor-pointer outline-none flex items-center justify-center gap-1.5 disabled:opacity-50 rounded-sm"
-          >
-            {loading ? (
-              <>
-                <FiLoader className="animate-spin text-sm" />
-                Parsing Koba Pages...
-              </>
-            ) : (
-              <>
-                <FiDownload className="text-sm" />
-                Scrape & Load Products
-              </>
-            )}
-          </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full border border-accent bg-accent px-5 py-3 text-[10px] uppercase tracking-widest font-bold text-white hover:bg-accent-deep transition-colors cursor-pointer outline-none flex items-center justify-center gap-1.5 disabled:opacity-50 rounded-sm"
+            >
+              {loading ? (
+                <>
+                  <FiLoader className="animate-spin text-sm" />
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <FiDownload className="text-sm" />
+                  Scrape URL
+                </>
+              )}
+            </button>
+          </div>
         </form>
 
-        {/* Database Category Assignment Card */}
-        <div className="border border-stone-200 bg-white p-4 sm:p-6 space-y-4 rounded-sm shadow-sm flex flex-col justify-between">
-          <div className="space-y-4">
+        {/* Database Category & Scrape Config Assignment Card */}
+        <div className="border border-stone-200 bg-white p-4 space-y-6 rounded-sm shadow-sm flex flex-col justify-between">
+          <div className="space-y-5">
             <div>
-              <h2 className="text-sm uppercase tracking-wider font-bold text-foreground">
-                Database Import Settings
+              <h2 className="text-sm uppercase tracking-wider font-bold text-foreground flex items-center gap-2">
+                <FiLayers /> Config & Destination
               </h2>
+              <p className="text-[10px] text-stone-400 mt-0.5">
+                Set category and page collection limits.
+              </p>
             </div>
 
-            <div className="space-y-4">
-              <label
-                htmlFor="db-category"
-                className="text-[10px] uppercase tracking-wider text-text-soft font-bold flex items-center gap-1"
-              >
-                <FiLayers />
-                Elara Category
-              </label>
-              <select
-                id="db-category"
-                value={selectedCategoryId}
-                onChange={(e) => setSelectedCategoryId(e.target.value)}
-                className="block w-full border border-stone-200 px-4 py-3 text-xs text-foreground outline-none transition-colors focus:border-accent bg-white"
-              >
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-1">
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-bold uppercase tracking-wider text-stone-500">
+                  Category
+                </label>
+                <select
+                  id="db-category"
+                  value={selectedCategoryId}
+                  onChange={(e) => setSelectedCategoryId(e.target.value)}
+                  className="block w-full border border-stone-200 px-3 py-2.5 text-xs text-foreground outline-none transition-colors focus:border-accent bg-white"
+                >
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-bold uppercase tracking-wider text-stone-500">
+                  Pages to Fetch
+                </label>
+                <select
+                  value={maxPages}
+                  onChange={(e) => setMaxPages(Number(e.target.value))}
+                  className="block w-full border border-stone-200 px-3 py-2.5 text-xs font-bold text-accent outline-none transition-colors focus:border-accent bg-white"
+                >
+                  <option value={1}>1 Page (Default)</option>
+                  <option value={2}>2 Pages (Up to 20)</option>
+                  <option value={3}>3 Pages (Up to 30)</option>
+                  <option value={5}>5 Pages (Up to 50)</option>
+                  <option value={10}>10 Pages (Max)</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -506,17 +568,20 @@ export default function KobaSourcingPage() {
                           <div className="inline-flex items-center gap-1 bg-[#f8fafc] border border-stone-100 px-2.5 py-1 rounded-lg text-[9px] font-bold text-stone-600 shadow-sm uppercase tracking-wider">
                             🧴 {detectedSize}
                           </div>
-                          
-                          {product.stockStatus && product.stockStatus !== "Unknown" && (
-                            <div className={[
-                              "inline-flex items-center gap-1 border px-2.5 py-1 rounded-lg text-[9px] font-bold shadow-sm uppercase tracking-wider",
-                              product.isOutOfStock 
-                                ? "bg-red-50 border-red-100 text-red-600"
-                                : "bg-emerald-50 border-emerald-100 text-emerald-600"
-                            ].join(" ")}>
-                              📦 {product.stockStatus}
-                            </div>
-                          )}
+
+                          {product.stockStatus &&
+                            product.stockStatus !== "Unknown" && (
+                              <div
+                                className={[
+                                  "inline-flex items-center gap-1 border px-2.5 py-1 rounded-lg text-[9px] font-bold shadow-sm uppercase tracking-wider",
+                                  product.isOutOfStock
+                                    ? "bg-red-50 border-red-100 text-red-600"
+                                    : "bg-emerald-50 border-emerald-100 text-emerald-600",
+                                ].join(" ")}
+                              >
+                                📦 {product.stockStatus}
+                              </div>
+                            )}
                         </div>
                       </div>
                     </div>
@@ -648,7 +713,9 @@ export default function KobaSourcingPage() {
                           "Importing..."
                         ) : (
                           <>
-                            <span><MdOutlineAddShoppingCart /></span>
+                            <span>
+                              <MdOutlineAddShoppingCart />
+                            </span>
                             <span>Add products</span>
                           </>
                         )}

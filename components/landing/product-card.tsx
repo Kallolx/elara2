@@ -30,20 +30,6 @@ type ProductCardProps = {
   };
 };
 
-function getTitleSizeClass(name: string) {
-  const wordCount = name.trim().split(/\s+/).length;
-  const characterCount = name.length;
-
-  if (wordCount >= 5 || characterCount >= 30) {
-    return "text-[1.05rem] sm:text-lg leading-[1]";
-  }
-
-  if (wordCount >= 4 || characterCount >= 24) {
-    return "text-[1.15rem] sm:text-lg leading-[1]";
-  }
-
-  return "text-xl sm:text-[1.4rem] leading-[1]";
-}
 
 export function ProductCard({ product }: ProductCardProps) {
   const router = useRouter();
@@ -160,11 +146,11 @@ export function ProductCard({ product }: ProductCardProps) {
       aria-label={`Open ${product.name} details`}
       onClick={handleNavigate}
       onKeyDown={handleKeyDown}
-      className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border border-line bg-white px-4 py-4 sm:px-5 sm:py-5 transition-shadow hover:shadow-md"
+      className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border border-line bg-white transition-shadow hover:shadow-md"
     >
-      <div className="relative rounded-lg overflow-hidden">
+      <div className="relative w-full overflow-hidden bg-surface">
         {discountPercentage > 0 ? (
-          <span className="absolute flex items-center gap-1 left-1 top-1 z-20 bg-black/5 px-2.5 py-1 text-sm text-accent rounded-full">
+          <span className="absolute flex items-center gap-1 left-3 top-3 z-20 bg-black/5 px-2.5 py-1 text-sm text-accent rounded-full">
             <MdLocalOffer className="w-4 h-4" />
             {discountPercentage}% OFF
           </span>
@@ -211,7 +197,7 @@ export function ProductCard({ product }: ProductCardProps) {
           />
         </button>
 
-        <div className="relative block bg-[#f9f9f9]">
+        <div className="relative block">
           <div className="relative h-[300px] w-full overflow-hidden">
             <img
               src={imageSrc}
@@ -225,7 +211,7 @@ export function ProductCard({ product }: ProductCardProps) {
       </div>
 
       {/* Content Body */}
-      <div className="flex flex-col flex-grow pt-4 pb-2">
+      <div className="flex flex-col flex-grow px-4 py-4 sm:px-5 sm:py-5">
         {/* Minimal Review Count Top of Name */}
         <div className="mb-2 font-medium flex items-center">
           {(product.reviewCount || 0) > 0 ? (
@@ -240,14 +226,14 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
 
         <h3
-          className={`font-sans font-normal text-foreground mb-1.5 ${getTitleSizeClass(product.name)}`}
+          className="font-sans font-medium text-foreground mb-1.5 text-lg sm:text-xl leading-tight line-clamp-2 min-h-[2.6em]"
         >
           {product.name}
         </h3>
       </div>
 
       {/* Footer: Price and Cart */}
-      <div className="mt-auto pt-1">
+      <div className="mt-auto pt-1 px-4 pb-4 sm:px-5 sm:pb-5">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <p className="text-2xl font-medium text-foreground">

@@ -33,7 +33,7 @@ const navigationGroups = [
       { href: "/admin", label: "Dashboard", icon: FiHome },
       { href: "/admin/orders", label: "Orders", icon: FiShoppingBag },
       { href: "/admin/customers", label: "Customers", icon: FiUsers },
-    ]
+    ],
   },
   {
     title: "Catalog Management",
@@ -41,7 +41,7 @@ const navigationGroups = [
       { href: "/admin/products", label: "Products", icon: FiPackage },
       { href: "/admin/categories", label: "Categories", icon: FiGrid },
       { href: "/admin/brands", label: "Brands", icon: FiAward },
-    ]
+    ],
   },
   {
     title: "Marketing & Assets",
@@ -50,14 +50,12 @@ const navigationGroups = [
       { href: "/admin/gallery", label: "Media Gallery", icon: FiImage },
       { href: "/admin/social", label: "Social Media", icon: FiInstagram },
       { href: "/admin/sourcing", label: "Koba Sourcing", icon: FiPlus },
-    ]
+    ],
   },
   {
     title: "Site Engine",
-    items: [
-      { href: "/admin/site", label: "Settings", icon: FiSettings },
-    ]
-  }
+    items: [{ href: "/admin/site", label: "Settings", icon: FiSettings }],
+  },
 ];
 
 export function AdminShell({ children }: { children: ReactNode }) {
@@ -67,12 +65,15 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [hasUnseenOrders, setHasUnseenOrders] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  
+
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(event.target as Node)
+      ) {
         setIsUserMenuOpen(false);
       }
     };
@@ -87,7 +88,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
       try {
         const token = localStorage.getItem("elara_token");
         if (!token) return;
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+        const baseUrl =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
         const res = await fetch(`${baseUrl}/orders`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -95,14 +97,21 @@ export function AdminShell({ children }: { children: ReactNode }) {
         if (json.success && Array.isArray(json.data)) {
           const allOrders = json.data;
           const seenOrdersStr = localStorage.getItem("elara_seen_orders");
-          const seenOrderIds: string[] = seenOrdersStr ? JSON.parse(seenOrdersStr) : [];
+          const seenOrderIds: string[] = seenOrdersStr
+            ? JSON.parse(seenOrdersStr)
+            : [];
 
           if (pathname === "/admin/orders") {
             const currentIds = allOrders.map((o: any) => o.id);
-            localStorage.setItem("elara_seen_orders", JSON.stringify(currentIds));
+            localStorage.setItem(
+              "elara_seen_orders",
+              JSON.stringify(currentIds),
+            );
             setHasUnseenOrders(false);
           } else {
-            const unseen = allOrders.some((o: any) => !seenOrderIds.includes(o.id));
+            const unseen = allOrders.some(
+              (o: any) => !seenOrderIds.includes(o.id),
+            );
             setHasUnseenOrders(unseen);
           }
         }
@@ -122,8 +131,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
     }
   }, [loading, user, router]);
 
-  const allNavItems = navigationGroups.flatMap(g => g.items);
-  
+  const allNavItems = navigationGroups.flatMap((g) => g.items);
+
   const activeSection =
     allNavItems
       .filter(
@@ -163,13 +172,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
         >
           <div className="px-5 py-5 sm:px-8 lg:px-6 shrink-0">
             <Link href="/" className="inline-flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center border border-white/15 bg-white/10 text-sm font-semibold tracking-[0.24em] text-white">
-                E
-              </span>
-              <span>
-                <span className="block text-sm uppercase tracking-[0.32em] text-white/75">
-                  Elara Admin
-                </span>
+              <span className="block text-sm uppercase tracking-[0.32em] text-white/75">
+                Elara Admin
               </span>
             </Link>
           </div>
@@ -177,12 +181,13 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <nav className="flex flex-col flex-1 gap-6 px-4 py-4">
             {navigationGroups.map((group) => (
               <div key={group.title} className="space-y-1.5">
-                <p className="px-4 text-sm text-white/40">
-                  {group.title}
-                </p>
+                <p className="px-4 text-sm text-white/40">{group.title}</p>
                 <div className="space-y-0.5">
                   {group.items.map((item) => {
-                    const active = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
+                    const active =
+                      pathname === item.href ||
+                      (item.href !== "/admin" &&
+                        pathname.startsWith(item.href));
                     const Icon = item.icon;
 
                     return (
@@ -196,7 +201,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
                             : "bg-transparent text-white/70 hover:bg-white/5 hover:text-white",
                         ].join(" ")}
                       >
-                        <Icon className={`text-[14px] ${active ? "text-accent" : "text-inherit"}`} />
+                        <Icon
+                          className={`text-[14px] ${active ? "text-accent" : "text-inherit"}`}
+                        />
                         <span className="relative inline-flex items-center gap-1.5">
                           {item.label}
                           {item.label === "Orders" && hasUnseenOrders && (
@@ -212,8 +219,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </nav>
         </aside>
 
-        <div className="flex-1">
-          <header className="border-b border-line bg-surface px-5 py-4 sm:px-8 lg:px-10">
+        <div className="flex-1 min-w-0">
+          <header className="border-b border-line bg-surface px-4 py-4 sm:px-6 lg:px-8">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
                 <button
@@ -250,7 +257,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                     className={`flex items-center gap-2.5 border px-3 py-2 text-foreground transition-all ${
-                      isUserMenuOpen ? "bg-surface border-accent" : "bg-background border-line hover:border-accent/50"
+                      isUserMenuOpen
+                        ? "bg-surface border-accent"
+                        : "bg-background border-line hover:border-accent/50"
                     }`}
                   >
                     <div className="w-7 h-7 rounded-full bg-accent-deep text-white flex items-center justify-center text-xs font-bold">
@@ -259,7 +268,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
                     <span className="hidden md:block text-xs font-medium text-foreground max-w-[100px] truncate">
                       {user.name?.split(" ")[0]}
                     </span>
-                    <FiChevronDown className={`text-xs text-text-soft transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />
+                    <FiChevronDown
+                      className={`text-xs text-text-soft transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`}
+                    />
                   </button>
 
                   <AnimatePresence>
@@ -272,8 +283,12 @@ export function AdminShell({ children }: { children: ReactNode }) {
                         className="absolute right-0 mt-2 w-56 border border-line bg-surface shadow-xl z-[100] overflow-hidden"
                       >
                         <div className="p-4 border-b border-line bg-background/50">
-                          <p className="text-sm font-semibold text-foreground truncate">{user.name}</p>
-                          <p className="text-[10px] uppercase tracking-wider text-text-soft mt-0.5">Administrator</p>
+                          <p className="text-sm font-semibold text-foreground truncate">
+                            {user.name}
+                          </p>
+                          <p className="text-[10px] uppercase tracking-wider text-text-soft mt-0.5">
+                            Administrator
+                          </p>
                         </div>
 
                         <div className="p-1.5">
@@ -286,7 +301,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                             <FiExternalLink className="text-text-soft group-hover:text-accent" />
                             <span>View Storefront</span>
                           </Link>
-                          
+
                           <Link
                             href="/admin/site"
                             className="flex items-center gap-3 w-full text-left px-3 py-2.5 text-sm text-foreground hover:bg-background transition-colors group"
@@ -314,7 +329,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
             </div>
           </header>
 
-          <main className="px-5 py-6 sm:px-8 lg:px-10 lg:py-8">{children}</main>
+          <main className="px-4 py-5 sm:px-6 lg:px-8 lg:py-8">{children}</main>
         </div>
       </div>
     </div>
