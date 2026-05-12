@@ -9,6 +9,7 @@ import {
   categoryStatusOptions,
   getCategoryIconPath,
 } from "@/components/admin/categories-data";
+import { CategoryIconSelector } from "@/components/admin/category-icon-selector";
 
 const initialForm = {
   name: "",
@@ -143,34 +144,12 @@ export default function AdminCategoryCreatePage() {
               </select>
             </label>
 
-            <label className="block text-sm lg:col-span-2">
-              <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-text-soft">Category Icon</span>
-              <div className="flex items-center gap-4 border border-line bg-background px-4 py-3">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center bg-surface rounded-sm border border-line p-1.5 shadow-sm">
-                  <img 
-                    src={getCategoryIconPath(formState.icon)} 
-                    alt="Icon Preview" 
-                    className="h-full w-full object-contain"
-                  />
-                </div>
-                <select
-                  value={formState.icon}
-                  onChange={(event) =>
-                    setFormState((current) => ({
-                      ...current,
-                      icon: event.target.value,
-                    }))
-                  }
-                  className="min-w-0 flex-1 bg-transparent text-foreground outline-none focus:border-accent h-10 cursor-pointer"
-                >
-                  {categoryIcons.map((option) => (
-                    <option key={option.path} value={option.path}>
-                      {option.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </label>
+            <div className="block text-sm lg:col-span-2 mt-2">
+              <CategoryIconSelector
+                value={formState.icon}
+                onChange={(newPath) => setFormState(c => ({ ...c, icon: newPath }))}
+              />
+            </div>
 
             <label className="block text-sm lg:col-span-2">
               <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-text-soft">Description</span>

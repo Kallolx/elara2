@@ -5,6 +5,9 @@ export const categoryIcons = [
   { name: "Serum", path: "/category/serum.png" },
   { name: "Sun Screen", path: "/category/sun-screen.png" },
   { name: "Toner", path: "/category/toner.png" },
+  { name: "Balm", path: "/category/balm.png" },
+  { name: "Peel", path: "/category/peel.png" },
+  { name: "Toner Pro", path: "/category/toner-2.png" },
 ] as const;
 
 export type CategoryIconPath = (typeof categoryIcons)[number]["path"];
