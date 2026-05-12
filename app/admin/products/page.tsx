@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
-import { FiPlus, FiPackage, FiTrash2, FiEdit3, FiRefreshCw, FiZap } from "react-icons/fi";
+import { FiPlus, FiPackage, FiTrash2, FiEdit3, FiRefreshCw, FiZap, FiSearch } from "react-icons/fi";
 import { LogoLoader } from "@/components/ui/logo-loader";
 import { Button, ButtonLink } from "@/components/ui/button";
 
@@ -36,6 +36,20 @@ export default function AdminProductsPage() {
   const [error, setError] = useState("");
   const [isAutoSyncing, setIsAutoSyncing] = useState(false);
 
+  // Master Source States (For Dropdowns)
+  const [allCategories, setAllCategories] = useState<any[]>([]);
+  const [allBrands, setAllBrands] = useState<any[]>([]);
+
+  // Paginated & Search States
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const limit = 20; // Fixed page size for admin
+
+  // Search input
+  const [searchInput, setSearchInput] = useState("");
+  const [activeSearch, setActiveSearch] = useState("");
+
   // Filters
   const [filterCategory, setFilterCategory] = useState("ALL");
   const [filterBrand, setFilterBrand] = useState("ALL");
@@ -66,54 +80,57 @@ export default function AdminProductsPage() {
     });
   };
 
-  const uniqueCategories = useMemo(() => {
-    const map = new Map();
-    products.forEach(p => {
-      if (p.categoryId && p.category) map.set(p.categoryId, p.category.name);
-    });
-    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
-  }, [products]);
-
-  const uniqueBrands = useMemo(() => {
-    const map = new Map();
-    products.forEach((p: any) => {
-      if (p.brand && p.brand.id) map.set(p.brand.id, p.brand.name);
-    });
-    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
-  }, [products]);
-
-  const uniqueOffers = useMemo(() => {
-    const map = new Map();
-    products.forEach((p) => {
-      const active = getActiveOffer(p);
-      if (active) map.set(active.id, active.title);
-    });
-    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
-  }, [products]);
-
-  const filteredProducts = useMemo(() => {
-    return products.filter((p: any) => {
-      if (filterCategory !== "ALL" && p.categoryId !== filterCategory) return false;
-      if (filterBrand !== "ALL" && (!p.brand || p.brand.id !== filterBrand)) return false;
-      if (filterOffer !== "ALL") {
-        const active = getActiveOffer(p);
-        if (filterOffer === "HAS_OFFER" && !active) return false;
-        if (filterOffer === "NO_OFFER" && active) return false;
-        if (filterOffer !== "HAS_OFFER" && filterOffer !== "NO_OFFER") {
-          if (!active || active.id !== filterOffer) return false;
-        }
+  // Load reference data once
+  useEffect(() => {
+    const loadRefs = async () => {
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+        const [catRes, brandRes] = await Promise.all([
+          fetch(`${baseUrl}/categories`),
+          fetch(`${baseUrl}/brands`)
+        ]);
+        const [catJson, brandJson] = await Promise.all([catRes.json(), brandRes.json()]);
+        if (catJson.success) setAllCategories(catJson.data);
+        if (brandJson.success) setAllBrands(brandJson.data);
+      } catch (err) {
+        console.error("Failed to load references", err);
       }
-      return true;
-    });
-  }, [products, filterCategory, filterBrand, filterOffer]);
+    };
+    loadRefs();
+  }, []);
+
+  // Auto-Search Debounce Effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setActiveSearch(searchInput);
+    }, 500); // 500ms pause triggers backend lookup
+    
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/products`);
+      
+      const query = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: limit.toString(),
+      });
+
+      if (activeSearch.trim()) query.append("search", activeSearch.trim());
+      if (filterCategory !== "ALL") query.append("categoryId", filterCategory);
+      if (filterBrand !== "ALL") query.append("brandId", filterBrand);
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/products?${query.toString()}`);
       const json = await res.json();
+      
       if (json.success) {
         setProducts(json.data);
+        // Load pagination data safely
+        if (json.pagination) {
+          setTotalPages(json.pagination.totalPages || 1);
+          setTotalItems(json.pagination.total || json.data.length);
+        }
       } else {
         setError(json.message || "Failed to load products");
       }
@@ -124,9 +141,31 @@ export default function AdminProductsPage() {
     }
   };
 
+  // Re-run fetching whenever pagination or filter state changes
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [currentPage, activeSearch, filterCategory, filterBrand]);
+
+  // Reset to page 1 when filter/search changes to prevent blank offsets
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeSearch, filterCategory, filterBrand]);
+
+  // Offers Filtering is done client-side on the PAGINATED set for ease, 
+  // though for large sets server-side would be better. We'll retain the existing logical split.
+  const filteredProducts = useMemo(() => {
+    return products.filter((p: any) => {
+      if (filterOffer !== "ALL") {
+        const active = getActiveOffer(p);
+        if (filterOffer === "HAS_OFFER" && !active) return false;
+        if (filterOffer === "NO_OFFER" && active) return false;
+        if (filterOffer !== "HAS_OFFER" && filterOffer !== "NO_OFFER") {
+          if (!active || active.id !== filterOffer) return false;
+        }
+      }
+      return true;
+    });
+  }, [products, filterOffer]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this product?")) {
@@ -214,24 +253,46 @@ export default function AdminProductsPage() {
           </div>
         </div>
 
-        {/* Filters Bar */}
+        {/* Search & Filters Bar */}
         <div className="flex flex-wrap items-center gap-3 border-b border-line px-4 py-3 bg-surface text-sm">
+          {/* Search Block */}
+          <form 
+            onSubmit={(e) => { e.preventDefault(); setActiveSearch(searchInput); }}
+            className="relative min-w-[240px]"
+          >
+            <input 
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search by Name or SKU..."
+              className="w-full border border-line bg-background pl-3 pr-10 py-1.5 outline-none focus:border-accent"
+            />
+            <button 
+              type="submit"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-soft hover:text-accent"
+            >
+              <FiSearch className="text-sm" />
+            </button>
+          </form>
+
+          <div className="h-5 w-[1px] bg-line mx-1 hidden md:block" />
+
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
-            className="border border-line bg-background px-3 py-1.5 outline-none focus:border-accent"
+            className="border border-line bg-background px-3 py-1.5 outline-none focus:border-accent min-w-[140px]"
           >
             <option value="ALL">All Categories</option>
-            {uniqueCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            {allCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
           
           <select
             value={filterBrand}
             onChange={(e) => setFilterBrand(e.target.value)}
-            className="border border-line bg-background px-3 py-1.5 outline-none focus:border-accent"
+            className="border border-line bg-background px-3 py-1.5 outline-none focus:border-accent min-w-[140px]"
           >
             <option value="ALL">All Brands</option>
-            {uniqueBrands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+            {allBrands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
           </select>
           
           <select
@@ -242,7 +303,6 @@ export default function AdminProductsPage() {
             <option value="ALL">All Offers</option>
             <option value="HAS_OFFER">Any Active Offer</option>
             <option value="NO_OFFER">No Active Offer</option>
-            {uniqueOffers.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
           </select>
 
           <Button
@@ -459,6 +519,36 @@ export default function AdminProductsPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Compact Navigation Pagination Footer */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-line px-5 py-4 bg-surface-strong/20">
+              <span className="text-xs font-medium text-text-soft">
+                Showing <span className="text-foreground font-bold">{(currentPage - 1) * limit + 1}</span> to <span className="text-foreground font-bold">{Math.min(currentPage * limit, totalItems)}</span> of <span className="text-foreground font-bold">{totalItems}</span> entries
+              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage <= 1}
+                  onClick={() => setCurrentPage(c => Math.max(1, c - 1))}
+                  className="h-8 text-xs px-3"
+                >
+                  Previous
+                </Button>
+                <div className="flex items-center gap-1 text-xs px-2 font-bold text-foreground">
+                  Page {currentPage} of {totalPages || 1}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setCurrentPage(c => Math.min(totalPages, c + 1))}
+                  className="h-8 text-xs px-3"
+                >
+                  Next
+                </Button>
+              </div>
             </div>
           </>
         )}
