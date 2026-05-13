@@ -37,8 +37,8 @@ export function LandingPage() {
         <main id="top" className="flex-grow">
           <HeroSection />
           <CategoriesSection />
-          <ShopByConcernSection />
           <OffersSection />
+          <ShopByConcernSection />
           <ProductsSection />
           <PromoBannerSection />
           <SocialMediaSection />

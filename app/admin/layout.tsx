@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AdminShell } from "@/components/admin/admin-shell";
+import { FloatingSyncHub } from "@/components/admin/floating-sync-hub";
 
 export const metadata: Metadata = {
   title: "Elara Admin | Control Center",
@@ -12,5 +13,10 @@ export default function AdminLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <AdminShell>{children}</AdminShell>;
+  return (
+    <AdminShell>
+      {children}
+      <FloatingSyncHub />
+    </AdminShell>
+  );
 }

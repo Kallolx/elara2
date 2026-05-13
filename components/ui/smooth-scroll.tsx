@@ -44,10 +44,31 @@ export default function SmoothScrollProvider({ children }: { children: React.Rea
       lenis.resize();
     }, 150);
 
+    // VISIBILITY RECOVERY: Explicitly wake and recalculate physics loops when user returns to tab
+    const handleVisibility = () => {
+      if (!document.hidden && lenisRef.current) {
+        lenisRef.current.start();
+        lenisRef.current.resize();
+      }
+    };
+    const handleFocus = () => {
+      if (lenisRef.current) {
+        lenisRef.current.start();
+        lenisRef.current.resize();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", handleFocus);
+
     // DECONSTRUCT: Cleanly dismantle listeners and remove styling classes to avoid freezing the viewport
     return () => {
       clearTimeout(resizeTimer);
       cancelAnimationFrame(rafId);
+      
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", handleFocus);
+
       lenis.destroy();
       lenisRef.current = null;
       

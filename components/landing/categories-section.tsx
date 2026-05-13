@@ -45,12 +45,15 @@ export function CategoriesSection() {
           `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/categories`,
         );
         const json = await res.json();
-        if (json.success) {
+        console.log("🏷️ API Categories response:", json);
+        if (json.success && Array.isArray(json.data)) {
           // Only show active categories
-          setCategories(json.data.filter((c: any) => c.status === "Active"));
+          const active = json.data.filter((c: any) => c.status === "Active");
+          console.log("🏷️ Rendering active categories:", active);
+          setCategories(active);
         }
       } catch (err) {
-        console.error("Failed to load categories:", err);
+        console.error("❌ FAILED to fetch categories from backend!", err);
       } finally {
         setLoading(false);
       }
@@ -65,11 +68,6 @@ export function CategoriesSection() {
         id="categories"
         className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8 lg:px-10"
       >
-        <div className="mb-8 text-center">
-          <h2 className="mt-2 font-display text-3xl font-semibold tracking-[-0.03em] text-foreground sm:text-4xl">
-            Categories
-          </h2>
-        </div>
         <div className="flex flex-wrap justify-center gap-4">
           {Array.from({ length: 6 }).map((_, index) => (
             <div
@@ -93,27 +91,13 @@ export function CategoriesSection() {
   return (
     <section
       id="categories"
-      className="mx-auto w-full max-w-7xl px-5 py-4 sm:px-8 lg:px-10 pb-8"
+      className="mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-10 py-8"
     >
-      <motion.div 
-        className="mb-8 text-center pt-4"
-        initial={{ opacity: 0, y: 15 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-60px" }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-      >
-        <h2 className="text-3xl font-serif text-text sm:text-4xl">
-          Categories
-        </h2>
-      </motion.div>
-
-      {/* Centered Dynamic Row Layout - preserving original brand borders & colors */}
       <motion.div 
         className="flex flex-wrap justify-center gap-4"
         variants={containerVariants}
         initial="hidden"
-        whileInView="show"
-        viewport={{ once: true, margin: "-60px" }}
+        animate="show"
       >
         {categories.map((category) => {
           return (

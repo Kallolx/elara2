@@ -11,6 +11,7 @@ interface ProductSize {
   label: string;
   price: number;
   oldPrice: number | null;
+  sku?: string | null;
 }
 
 interface Product {
@@ -35,6 +36,8 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isAutoSyncing, setIsAutoSyncing] = useState(false);
+  const [syncStatusMsg, setSyncStatusMsg] = useState("");
+  const [syncReport, setSyncReport] = useState<any | null>(null);
 
   // Master Source States (For Dropdowns)
   const [allCategories, setAllCategories] = useState<any[]>([]);
@@ -167,6 +170,65 @@ export default function AdminProductsPage() {
     });
   }, [products, filterOffer]);
 
+  // Smart Initial Sync Telemetry Probe: Discovers if Global Floating Sync Hub is already running!
+  useEffect(() => {
+    const checkBackendOnMount = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/sourcing/sync-status`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("elara_token")}` }
+        });
+        const data = await res.json();
+        if (data.success && data.isRunning) {
+          setIsAutoSyncing(true);
+          setSyncStatusMsg(data.progressMsg || "Synchronizing background thread...");
+        }
+      } catch (err) {
+        console.warn("Failed initial mount-time telemetry probe.");
+      }
+    };
+    checkBackendOnMount();
+  }, []);
+
+  // Reusable client-side event-loop poller to maintain live state linkages
+  useEffect(() => {
+    let pollingHandle: NodeJS.Timeout | null = null;
+
+    if (isAutoSyncing) {
+      const pollStatus = async () => {
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/sourcing/sync-status`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem("elara_token")}` }
+          });
+          const data = await res.json();
+          if (!data.success) return;
+
+          // Link local status message immediately to floating telemetry feed!
+          setSyncStatusMsg(data.progressMsg || "Syncing...");
+
+          if (data.status === "completed") {
+            setIsAutoSyncing(false);
+            setSyncStatusMsg("");
+            setSyncReport(data.result);
+            fetchProducts(); // refresh product list
+          } else if (data.status === "failed") {
+            setIsAutoSyncing(false);
+            setSyncStatusMsg("");
+            alert(`❌ Cloud Sync Failed:\n\n${data.error || "Unknown error"}`);
+          }
+        } catch (err) {
+          console.warn("Linked telemetry blip:", err);
+        }
+      };
+
+      pollStatus();
+      pollingHandle = setInterval(pollStatus, 2500);
+    }
+
+    return () => {
+      if (pollingHandle) clearInterval(pollingHandle);
+    };
+  }, [isAutoSyncing]);
+
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this product?")) {
       return;
@@ -191,11 +253,13 @@ export default function AdminProductsPage() {
 
   const runAutoSync = async () => {
     const userConsent = confirm(
-      "Run Full Inventory Sync?\n\nThis will boot our automated crawler, log into the supplier portal, scrape the last 15 pages of products, and bulk-update your store automatically.\n\nThis might take 30-60 seconds to complete. Do you want to proceed?"
+      "Initiate Precision Catalog Stock Sync?\n\nThis launches an ultra-targeted search against active local barcodes to reconcile live inventories.\n\nLaunch Sync?"
     );
     if (!userConsent) return;
 
     setIsAutoSyncing(true);
+    setSyncStatusMsg("🚀 Spawning cloud thread...");
+
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/sourcing/auto-sync`, {
         method: "POST",
@@ -203,17 +267,20 @@ export default function AdminProductsPage() {
           Authorization: `Bearer ${localStorage.getItem("elara_token")}`,
         },
       });
-      const json = await res.json();
-      if (json.success) {
-        alert(`✅ Sync Completed Successfully!\n\nTotal Scanned: ${json.totalScanned} products.\nRecords Updated: ${json.updatedCount}`);
-        fetchProducts(); // reload locally to reflect changes
-      } else {
-        alert(`❌ Sync Failed: ${json.message}`);
+      
+      const data = await res.json();
+      if (!data.success) {
+        setIsAutoSyncing(false);
+        setSyncStatusMsg("");
+        alert(`❌ Sync Denied: ${data.message}`);
+        return;
       }
+      
+      // The persistent useEffect above automatically grabs this toggle state and spins the interval!
     } catch (err) {
-      alert("Automation link broken. Ensure backend is running.");
-    } finally {
       setIsAutoSyncing(false);
+      setSyncStatusMsg("");
+      alert("Automation gateway offline.");
     }
   };
 
@@ -235,8 +302,10 @@ export default function AdminProductsPage() {
             >
               {isAutoSyncing ? (
                 <>
-                  <FiRefreshCw className="animate-spin text-sm mr-1" />
-                  Syncing...
+                  <FiRefreshCw className="animate-spin text-sm mr-1.5 shrink-0 text-[#6366f1]" />
+                  <span className="text-[11px] font-semibold tracking-wide text-[#6366f1]">
+                    {syncStatusMsg || "Syncing catalog..."}
+                  </span>
                 </>
               ) : (
                 <>
@@ -375,7 +444,15 @@ export default function AdminProductsPage() {
                         ID: {product.id.length > 10 ? product.id.substring(0, 10) + "..." : product.id}
                       </p>
                       <div className="flex flex-wrap items-center gap-2 mt-1 text-[11px] uppercase tracking-[0.22em] font-semibold">
-                        <p className="text-text-soft">SKU: {product.sku}</p>
+                        <div className="text-text-soft flex flex-wrap gap-1.5 items-center">
+                          <span>SKUs:</span>
+                          {Array.from(new Set([
+                            product.sku,
+                            ...(product.sizes?.map((s: any) => s.sku) || [])
+                          ].filter(Boolean))).map((s: any, idx) => (
+                            <span key={idx} className="bg-surface px-1 border border-line text-[10px] tracking-tight normal-case">{s}</span>
+                          ))}
+                        </div>
                         <span className={`px-2 py-0.5 rounded-sm text-[9px] border ${
                           product.isOutOfStock ? "border-red-100 bg-red-50 text-red-600" : "border-emerald-100 bg-emerald-50 text-emerald-600"
                         }`}>
@@ -470,7 +547,21 @@ export default function AdminProductsPage() {
                           <span className="truncate max-w-[200px]">{product.name}</span>
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-text-soft">{product.sku}</td>
+                      <td className="px-5 py-4 text-text-soft">
+                        <div className="flex flex-col gap-0.5 min-w-[120px]">
+                          {Array.from(new Set([
+                            product.sku,
+                            ...(product.sizes?.map((s: any) => s.sku) || [])
+                          ].filter(Boolean))).map((s: any, idx) => (
+                            <span key={idx} className="text-[11px] font-medium tracking-wide text-foreground/90" title={s}>
+                              {s}
+                            </span>
+                          ))}
+                          {(!product.sku && (!product.sizes || !product.sizes.some(s => s.sku))) && (
+                            <span className="text-xs italic opacity-40">No SKU</span>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-5 py-4 text-text-soft">
                         {product.category?.name || "Uncategorized"}
                       </td>
@@ -553,6 +644,142 @@ export default function AdminProductsPage() {
           </>
         )}
       </article>
+
+      {/* Enriched Sync Summary Modal Diagnostics */}
+      {syncReport && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-white border border-line shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col rounded-xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="bg-emerald-500 text-slate-900 h-8 w-8 rounded-full flex items-center justify-center font-bold text-lg">
+                  ✓
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold">Intelligent Sync Report</h3>
+                  <p className="text-[10px] text-slate-300 uppercase tracking-wider font-medium">
+                    Koba Automated Crawl Diagnostics
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSyncReport(null)}
+                className="text-slate-400 hover:text-white text-xl outline-none leading-none cursor-pointer"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Stat Summary Grid */}
+            <div className="grid grid-cols-3 border-b border-line divide-x divide-line bg-slate-50 flex-shrink-0">
+              <div className="p-4 text-center">
+                <span className="block text-[10px] font-bold uppercase text-text-soft tracking-wider">
+                  Scanned Products
+                </span>
+                <span className="block text-2xl font-extrabold text-foreground mt-1">
+                  {syncReport.totalScanned || 0}
+                </span>
+              </div>
+              <div className="p-4 text-center">
+                <span className="block text-[10px] font-bold uppercase text-text-soft tracking-wider">
+                  Matches Linked
+                </span>
+                <span className="block text-2xl font-extrabold text-[#6366f1] mt-1">
+                  {syncReport.totalMatches || 0}
+                </span>
+              </div>
+              <div className="p-4 text-center bg-emerald-50/20">
+                <span className="block text-[10px] font-bold uppercase text-emerald-800 tracking-wider">
+                  SQL Adjustments
+                </span>
+                <span className="block text-2xl font-extrabold text-emerald-600 mt-1">
+                  +{syncReport.updatedCount || 0}
+                </span>
+              </div>
+            </div>
+
+            {/* Scrollable Result Table */}
+            <div className="flex-1 overflow-y-auto p-6 bg-white">
+              <h4 className="text-xs font-bold uppercase tracking-widest text-text-soft mb-4">
+                Resolved Catalog Items ({syncReport.matches?.length || 0})
+              </h4>
+
+              <div className="border border-line rounded-lg overflow-hidden divide-y divide-line">
+                {!syncReport.matches || syncReport.matches.length === 0 ? (
+                  <div className="p-8 text-center text-sm text-text-soft italic">
+                    No catalog items were mapped during this sync cycle.
+                  </div>
+                ) : (
+                  syncReport.matches.map((m: any, idx: number) => (
+                    <div
+                      key={idx}
+                      className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-3 hover:bg-slate-50/80 transition-colors ${
+                        m.wasUpdated
+                          ? "bg-emerald-50/30 border-l-4 border-l-emerald-500"
+                          : ""
+                      }`}
+                    >
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <p className="font-semibold text-foreground text-[13px] truncate">
+                          {m.name}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2 text-[10px]">
+                          <span className="font-mono text-text-soft select-all">
+                            SKU: {m.sku}
+                          </span>
+                          <span className="h-1 w-1 bg-text-soft/30 rounded-full"></span>
+                          <span
+                            className={`font-bold px-1.5 rounded border text-[9px] uppercase tracking-wide ${
+                              m.method === "Direct SKU"
+                                ? "text-[#6366f1] bg-[#6366f1]/5 border-[#6366f1]/20"
+                                : "text-amber-700 bg-amber-50 border-amber-100"
+                            }`}
+                          >
+                            {m.method}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span
+                          className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full border ${
+                            m.outOfStock
+                              ? "text-red-600 bg-red-50 border-red-100"
+                              : "text-emerald-700 bg-emerald-50 border-emerald-100"
+                          }`}
+                        >
+                          {m.outOfStock ? "Out of Stock" : "In Stock"}
+                        </span>
+
+                        {m.wasUpdated ? (
+                          <span className="text-[9px] uppercase tracking-widest font-extrabold px-2 py-1 bg-emerald-600 text-white rounded flex items-center gap-1 animate-pulse shadow-sm">
+                            🔥 UPDATED
+                          </span>
+                        ) : (
+                          <span className="text-[9px] uppercase tracking-widest font-bold px-2 py-1 text-stone-400 border border-stone-200 rounded">
+                            SYNCED
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="bg-slate-50 border-t border-line p-4 flex justify-end flex-shrink-0">
+              <Button
+                onClick={() => setSyncReport(null)}
+                variant="primary"
+                className="px-8 font-semibold"
+              >
+                Close Diagnostics
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
