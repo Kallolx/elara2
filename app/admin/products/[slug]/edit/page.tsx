@@ -160,7 +160,7 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
                   unit: parts[1] || "ml",
                   price: String(s.price),
                   oldPrice: s.oldPrice ? String(s.oldPrice) : "",
-                  sku: s.sku || "",
+                  sku: s.sku || prod.sku || "", // Auto-fallback to parent product SKU for easy legacy migration
                   isOutOfStock: s.isOutOfStock === true,
                 };
               })
@@ -714,12 +714,12 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
                       setSizeRows((current) =>
                         current.map((item, idx) =>
                           idx === index
-                            ? { ...item, sku: event.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, "") }
+                            ? { ...item, sku: event.target.value.trim() }
                             : item,
                         ),
                       )
                     }
-                    placeholder="KOBA-..."
+                    placeholder="Enter SKU (e.g., Barcode)"
                     className="w-full border border-line bg-surface px-4 py-2.5 text-foreground outline-none focus:border-accent text-sm"
                   />
                 </label>

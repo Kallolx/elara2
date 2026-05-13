@@ -584,12 +584,12 @@ export default function AdminProductCreatePage() {
                       setSizeRows((current) =>
                         current.map((item, idx) =>
                           idx === index
-                            ? { ...item, sku: event.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, "") }
+                            ? { ...item, sku: event.target.value.trim() }
                             : item,
                         ),
                       )
                     }
-                    placeholder="KOBA-..."
+                    placeholder="Enter SKU"
                     className="w-full border border-line bg-surface px-4 py-2.5 text-foreground outline-none focus:border-accent text-sm"
                   />
                 </label>
