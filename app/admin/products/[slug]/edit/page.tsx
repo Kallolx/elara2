@@ -254,8 +254,8 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!sku || !name || !categoryId) {
-      setError("SKU, Name, and Category are required fields.");
+    if (!name || !categoryId) {
+      setError("Name and Category are required fields.");
       return;
     }
 
@@ -264,14 +264,21 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
       setError("");
 
       const parsedSizes = sizeRows
-        .filter((r) => r.size && r.price)
+        .filter((r) => r.size && r.price && r.sku)
         .map((r) => ({
           label: `${r.size} ${r.unit}`,
           price: Number(r.price),
           oldPrice: r.oldPrice ? Number(r.oldPrice) : undefined,
-          sku: r.sku ? r.sku.trim() : undefined,
+          sku: r.sku.trim(),
           isOutOfStock: r.isOutOfStock === true,
         }));
+
+      if (parsedSizes.length === 0) {
+        setError("At least one size variant with a valid price and SKU is required.");
+        return;
+      }
+
+      const primarySku = parsedSizes[0].sku;
 
       const parsedReviews = reviewRows
         .filter((r) => r.username && r.text)
@@ -284,7 +291,7 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
         }));
 
       const payload = {
-        sku,
+        sku: primarySku,
         name,
         categoryId,
         brandId: brandId || null,
@@ -383,15 +390,6 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
               />
             </label>
 
-            <label className="block text-sm">
-              <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-text-soft">Product code / SKU</span>
-              <input
-                required
-                value={sku}
-                onChange={(e) => setSku(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ""))}
-                className="w-full border border-line bg-background px-4 py-3 text-foreground outline-none focus:border-accent"
-              />
-            </label>
 
             <label className="block text-sm">
               <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-text-soft">Slug</span>
@@ -707,8 +705,9 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
                   />
                 </label>
                 <label className="block">
-                  <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-text-soft">Variant SKU (For Sync)</span>
+                  <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-text-soft">Variant SKU</span>
                   <input
+                    required
                     type="text"
                     value={row.sku}
                     onChange={(event) =>
@@ -720,8 +719,8 @@ export default function AdminProductEditPage({ params }: ProductEditPageProps) {
                         ),
                       )
                     }
-                    placeholder="Optional SKU mapping"
-                    className="w-full border border-line bg-surface px-4 py-2.5 text-foreground outline-none focus:border-accent text-sm placeholder:opacity-60"
+                    placeholder="KOBA-..."
+                    className="w-full border border-line bg-surface px-4 py-2.5 text-foreground outline-none focus:border-accent text-sm"
                   />
                 </label>
 
