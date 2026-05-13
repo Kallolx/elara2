@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 
 export function PromoBannerSection() {
   return (
-    <section className="relative mx-auto max-w-7xl px-5 sm:px-8 lg:px-10 py-16 mt-10 mb-10 overflow-visible">
+    <section className="relative mx-auto max-w-7xl px-5 sm:px-8 lg:px-10 py-8 sm:py-16 mt-4 sm:mt-10 mb-8 sm:mb-10 overflow-visible">
       {/* Backer Container (Gradient Background mapped to Site Themes) */}
       <div className="relative w-full h-[540px] md:h-[360px] rounded-3xl overflow-hidden md:overflow-visible bg-gradient-to-br from-surface via-surface-strong/70 to-[#efe4d9] border border-line/40 flex flex-col md:flex-row items-center">
         
@@ -77,7 +77,7 @@ export function PromoBannerSection() {
         
         {/* Side Metric Pill (Floating) - Spring Bloom Reveal */}
         <motion.div 
-          className="absolute flex items-center gap-3 bottom-[230px] sm:bottom-[270px] md:bottom-12 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-[35%] bg-white/90 backdrop-blur-md border border-white shadow-xl px-5 py-2 rounded-2xl z-30 animate-pulse-subtle"
+          className="absolute flex items-center gap-3 bottom-6 sm:bottom-8 md:bottom-12 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-[35%] bg-white/90 backdrop-blur-md border border-white shadow-xl px-5 py-2 rounded-2xl z-30 animate-pulse-subtle"
           initial={{ opacity: 0, scale: 0.85, y: 15 }}
           whileInView={{ opacity: 1, scale: 1, y: 0 }}
           viewport={{ once: true }}

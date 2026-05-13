@@ -56,7 +56,10 @@ function SearchableSelect({
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
         setInputValue(value || ""); // Safely revert to active selection if discarded
       }
@@ -67,13 +70,15 @@ function SearchableSelect({
 
   // Filter by typing directly in the main field
   const filtered = options.filter((opt) =>
-    opt.toLowerCase().includes(inputValue.toLowerCase())
+    opt.toLowerCase().includes(inputValue.toLowerCase()),
   );
 
   return (
     <div className="relative space-y-2 w-full" ref={containerRef}>
-      <label className="block text-sm font-semibold text-text-soft">{label}</label>
-      
+      <label className="block text-sm font-semibold text-text-soft">
+        {label}
+      </label>
+
       <div className="relative">
         <input
           type="text"
@@ -86,18 +91,24 @@ function SearchableSelect({
           }}
           placeholder={placeholder}
           className={`w-full flex items-center justify-between border border-line rounded-lg pl-4 pr-10 py-3 text-sm text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/10 transition-all placeholder:text-text-soft/50 ${
-            disabled 
-              ? "bg-surface-strong/20 cursor-not-allowed text-text-soft/40" 
+            disabled
+              ? "bg-surface-strong/20 cursor-not-allowed text-text-soft/40"
               : "bg-background cursor-pointer font-medium"
           }`}
         />
-        <FiChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 transition-transform duration-200 text-text-soft pointer-events-none ${isOpen ? "rotate-180" : ""}`} />
+        <FiChevronDown
+          className={`absolute right-4 top-1/2 -translate-y-1/2 transition-transform duration-200 text-text-soft pointer-events-none ${isOpen ? "rotate-180" : ""}`}
+        />
       </div>
 
       <AnimatePresence>
         {isOpen && !disabled && (
           <motion.div
-            initial={{ opacity: 0, y: direction === "up" ? -5 : 5, scale: 0.98 }}
+            initial={{
+              opacity: 0,
+              y: direction === "up" ? -5 : 5,
+              scale: 0.98,
+            }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: direction === "up" ? -5 : 5, scale: 0.98 }}
             transition={{ duration: 0.15 }}
@@ -105,7 +116,10 @@ function SearchableSelect({
               direction === "up" ? "bottom-full mb-2" : "top-full mt-1"
             }`}
           >
-            <div className="flex-1 overflow-y-auto py-1.5 custom-scrollbar bg-surface" data-lenis-prevent>
+            <div
+              className="flex-1 overflow-y-auto py-1.5 custom-scrollbar bg-surface"
+              data-lenis-prevent
+            >
               {filtered.length > 0 ? (
                 filtered.map((opt) => (
                   <button
@@ -117,8 +131,8 @@ function SearchableSelect({
                       setIsOpen(false);
                     }}
                     className={`w-full text-left px-4 py-2 text-xs font-medium transition-colors border-l-2 ${
-                      value === opt 
-                        ? "border-accent bg-accent/5 text-accent font-bold" 
+                      value === opt
+                        ? "border-accent bg-accent/5 text-accent font-bold"
                         : "border-transparent text-foreground/80 hover:bg-background hover:text-foreground"
                     }`}
                   >
@@ -151,7 +165,6 @@ type SavedAddress = {
   isDefault: boolean;
 };
 
-
 export default function CheckoutPage() {
   const { cartItems, cartSubtotal, clearCart } = useCart();
   const { user, isAuthenticated } = useAuth();
@@ -175,7 +188,6 @@ export default function CheckoutPage() {
 
   // Real-time Automation Tracking
   const [isLocationManuallySet, setIsLocationManuallySet] = useState(false);
-
 
   // Main Checkout Interaction States
   const [orderNotes, setOrderNotes] = useState("");
@@ -202,12 +214,13 @@ export default function CheckoutPage() {
   const [deliveryZones, setDeliveryZones] = useState<any[]>([]);
 
   useEffect(() => {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+    const baseUrl =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
     fetch(`${baseUrl}/delivery-zones`)
-      .then(res => res.json())
-      .then(json => {
+      .then((res) => res.json())
+      .then((json) => {
         if (json.success) setDeliveryZones(json.data);
-      })
+      });
   }, []);
 
   // 🔒 Prevent background scroll bleeding when modal overlays are active
@@ -229,10 +242,15 @@ export default function CheckoutPage() {
     }
   }, [isAddressModalOpen]);
 
-  // 🔮 INTELLIGENT GEO-DETECTOR: Scans the street field as user types, and instantly populates 
+  // 🔮 INTELLIGENT GEO-DETECTOR: Scans the street field as user types, and instantly populates
   // the Delivery Area / District dropdowns if an unambiguous sub-area match is identified.
   useEffect(() => {
-    if (isLocationManuallySet || !addrStreet || addrStreet.length < 4 || deliveryZones.length === 0) {
+    if (
+      isLocationManuallySet ||
+      !addrStreet ||
+      addrStreet.length < 4 ||
+      deliveryZones.length === 0
+    ) {
       return;
     }
 
@@ -256,12 +274,13 @@ export default function CheckoutPage() {
     for (const candidate of parsingRegistry) {
       if (candidate.term.length < 3) continue;
 
-      const escapedTerm = candidate.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const escapedTerm = candidate.term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       // Uses exact word boundary \b mechanics for robust language isolation
-      const matcher = new RegExp(`\\b${escapedTerm}\\b`, 'i');
+      const matcher = new RegExp(`\\b${escapedTerm}\\b`, "i");
 
       if (matcher.test(addrStreet)) {
-        matchedArea = candidate.term === candidate.district ? "" : candidate.term;
+        matchedArea =
+          candidate.term === candidate.district ? "" : candidate.term;
         matchedCity = candidate.district;
         break; // Match achieved, lock highest-confidence entry
       }
@@ -290,7 +309,6 @@ export default function CheckoutPage() {
     return options.sort((a, b) => a.localeCompare(b));
   }, [deliveryZones]);
 
-
   // ---- CALCULATIONS ----
   const selectedAddr = useMemo(
     () => savedAddresses.find((a) => a.id === selectedAddressId),
@@ -298,11 +316,12 @@ export default function CheckoutPage() {
   );
 
   const totalSavings = useMemo(() => {
-    const pN = (v: any) => parseFloat(String(v || "0").replace(/[^0-9.]/g, "")) || 0;
+    const pN = (v: any) =>
+      parseFloat(String(v || "0").replace(/[^0-9.]/g, "")) || 0;
     return cartItems.reduce((acc, item) => {
       const cp = pN(item.size.price);
       const op = pN(item.size.oldPrice);
-      const discount = (op > cp) ? (op - cp) * item.quantity : 0;
+      const discount = op > cp ? (op - cp) * item.quantity : 0;
       return acc + discount;
     }, 0);
   }, [cartItems]);
@@ -312,9 +331,10 @@ export default function CheckoutPage() {
   const shipping = useMemo(() => {
     if (!selectedAddr) return 0;
     // Robust dynamic DB lookup for direct district-to-cost reconciliation!
-    const matched = deliveryZones.find(z => 
-      z.district.toLowerCase() === selectedAddr.city.toLowerCase() ||
-      z.district.toLowerCase() === selectedAddr.division.toLowerCase()
+    const matched = deliveryZones.find(
+      (z) =>
+        z.district.toLowerCase() === selectedAddr.city.toLowerCase() ||
+        z.district.toLowerCase() === selectedAddr.division.toLowerCase(),
     );
     return matched ? matched.charge : 120; // Reliable fallback
   }, [selectedAddr, deliveryZones]);
@@ -323,7 +343,6 @@ export default function CheckoutPage() {
     const base = cartSubtotal + shipping + tax - appliedDiscount;
     return base < 0 ? 0 : base;
   }, [cartSubtotal, shipping, tax, appliedDiscount]);
-
 
   // ---- HANDLERS ----
   const handleSaveNewAddress = (e: React.FormEvent) => {
@@ -433,7 +452,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground relative overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-background text-foreground relative">
       {/* RESTORE Top Hanging Leaves Background Component requested by User Aesthetics */}
       <div className="absolute top-0 left-0 right-0 pointer-events-none select-none opacity-20 z-0">
         <Image
@@ -492,13 +511,13 @@ export default function CheckoutPage() {
                 <section className="bg-surface border border-line/60 rounded-2xl overflow-hidden">
                   {/* Shipping Component Wrapper */}
                   <div className="p-6 sm:p-8 border-b border-line/60">
-                    <div className="flex items-center justify-between mb-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                       <h2 className="font-display text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
                         Shipping Address
                       </h2>
                       <Button
                         onClick={() => setIsAddressModalOpen(true)}
-                        className="flex items-center gap-2 "
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 py-3 sm:py-2"
                       >
                         <FiPlus className="text-base" />
                         Add New Address
@@ -672,19 +691,30 @@ export default function CheckoutPage() {
                           <p className="font-bold text-sm text-foreground line-clamp-1">
                             {item.product.name}
                           </p>
-                          
+
                           {/* Enhanced Savings/Qty Block requested by User */}
                           <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-1 text-xs">
                             <span className="text-text-soft whitespace-nowrap font-medium">
                               {item.quantity} x
                             </span>
-                            
+
                             <span className="text-foreground font-semibold whitespace-nowrap">
-                              ৳{(parseFloat(String(item.size.price || "0").replace(/[^0-9.]/g, "")) || 0).toLocaleString()}
+                              ৳
+                              {(
+                                parseFloat(
+                                  String(item.size.price || "0").replace(
+                                    /[^0-9.]/g,
+                                    "",
+                                  ),
+                                ) || 0
+                              ).toLocaleString()}
                             </span>
-                            
+
                             {(() => {
-                              const parseN = (v: any) => parseFloat(String(v || "0").replace(/[^0-9.]/g, "")) || 0;
+                              const parseN = (v: any) =>
+                                parseFloat(
+                                  String(v || "0").replace(/[^0-9.]/g, ""),
+                                ) || 0;
                               const pPrice = parseN(item.size.price);
                               const oPrice = parseN(item.size.oldPrice);
                               if (oPrice > pPrice) {
@@ -694,7 +724,10 @@ export default function CheckoutPage() {
                                       ৳{oPrice.toLocaleString()}
                                     </span>
                                     <span className="bg-green-500/10 text-green-600 px-1.5 py-1 rounded text-[10px] font-medium leading-none flex items-center">
-                                      Saved ৳{Math.round(oPrice - pPrice).toLocaleString()}
+                                      Saved ৳
+                                      {Math.round(
+                                        oPrice - pPrice,
+                                      ).toLocaleString()}
                                     </span>
                                   </>
                                 );
@@ -705,7 +738,15 @@ export default function CheckoutPage() {
                         </div>
                         <div className="flex flex-col items-end justify-center shrink-0 pl-2">
                           <span className="font-bold text-sm text-foreground">
-                            ৳{((parseFloat(String(item.size.price || "0").replace(/[^0-9.]/g, "")) || 0) * item.quantity).toLocaleString()}
+                            ৳
+                            {(
+                              (parseFloat(
+                                String(item.size.price || "0").replace(
+                                  /[^0-9.]/g,
+                                  "",
+                                ),
+                              ) || 0) * item.quantity
+                            ).toLocaleString()}
                           </span>
                         </div>
                       </div>
@@ -771,8 +812,12 @@ export default function CheckoutPage() {
                     {/* TOTAL SAVINGS LIST ITEM */}
                     {totalSavings > 0 && (
                       <div className="flex items-center justify-between">
-                        <span className="text-text-soft">Savings for This Order</span>
-                        <span className="font-semibold text-green-500">৳{totalSavings.toLocaleString()}.00</span>
+                        <span className="text-text-soft">
+                          Savings for This Order
+                        </span>
+                        <span className="font-semibold text-green-500">
+                          ৳{totalSavings.toLocaleString()}.00
+                        </span>
                       </div>
                     )}
 
@@ -853,8 +898,10 @@ export default function CheckoutPage() {
       {/* --- ADD ADDRESS MODAL OVERLAY --- */}
       <AnimatePresence>
         {isAddressModalOpen && (
-          <div className="fixed inset-0 z-[999] overflow-y-auto bg-black/60 backdrop-blur-sm flex items-start justify-center px-4 py-12 sm:py-16" data-lenis-prevent>
-
+          <div
+            className="fixed inset-0 z-[999] overflow-y-auto bg-black/60 backdrop-blur-sm flex items-start justify-center px-4 py-12 sm:py-16"
+            data-lenis-prevent
+          >
             {/* Clickable Overlay Backdrop (Absolute inside fixed container) */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -890,7 +937,6 @@ export default function CheckoutPage() {
                 onSubmit={handleSaveNewAddress}
                 className="px-6 py-6 space-y-6 overflow-visible"
               >
-
                 {/* Type Select (Home, Office, Others) */}
                 <div className="flex items-center gap-6 pb-2">
                   {(["Home", "Office", "Others"] as const).map((t) => (
@@ -970,12 +1016,11 @@ export default function CheckoutPage() {
                     label="Delivery Area / Upazila"
                     placeholder="Start typing your area (e.g. Mirpur, Dhanmondi, CEPZ...)"
                     value={
-                      addrArea && addrCity 
-                        ? `${addrArea}, ${addrCity}` 
+                      addrArea && addrCity
+                        ? `${addrArea}, ${addrCity}`
                         : addrArea || addrCity
                     }
                     direction="down"
-
                     options={flatLocationOptions}
                     onChange={(val) => {
                       setIsLocationManuallySet(true); // 🔒 Restrict automatic overwrite once manual intent is declared
@@ -991,12 +1036,8 @@ export default function CheckoutPage() {
                         setAddrDivision(val);
                       }
                     }}
-
                   />
                 </div>
-
-
-
 
                 {/* Checkbox Default */}
                 <label className="flex items-center gap-3 cursor-pointer group">
@@ -1030,8 +1071,10 @@ export default function CheckoutPage() {
       {/* SUCCESS ORDER MODAL (UNCHANGED FUNCTIONAL) */}
       <AnimatePresence>
         {placedOrder && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4" data-lenis-prevent>
-
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center px-4"
+            data-lenis-prevent
+          >
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

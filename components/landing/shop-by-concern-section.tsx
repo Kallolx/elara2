@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import useEmblaCarousel from "embla-carousel-react";
-import Autoplay from "embla-carousel-autoplay";
 import { motion } from "framer-motion";
 
 const concernContainerVariants = {
@@ -64,16 +63,11 @@ const concerns = [
 ];
 
 export function ShopByConcernSection() {
-  const [emblaRef, emblaApi] = useEmblaCarousel(
-    {
-      align: "start",
-      containScroll: "trimSnaps",
-      loop: true,
-    },
-    [
-      Autoplay({ delay: 2000, stopOnInteraction: false, stopOnMouseEnter: true })
-    ]
-  );
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    align: "start",
+    containScroll: "trimSnaps",
+    loop: true,
+  });
 
   const [prevBtnEnabled, setPrevBtnEnabled] = useState(false);
   const [nextBtnEnabled, setNextBtnEnabled] = useState(true);

@@ -121,7 +121,8 @@ export function ProductsSection() {
         transition={{ duration: 0.6 }}
       >
         <div>
-          <h2 className="text-3xl font-serif text-text sm:text-4xl">
+          <h2 className="flex items-center gap-3 text-3xl font-serif text-text sm:text-4xl">
+            <img src="/new.png" alt="New" className="h-8 w-8 sm:h-10 sm:w-10 object-contain" />
             Recent Arrivals
           </h2>
         </div>

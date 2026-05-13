@@ -49,7 +49,9 @@ export function CategoriesSection() {
         if (json.success && Array.isArray(json.data)) {
           // Only show active categories
           const active = json.data.filter((c: any) => c.status === "Active");
-          console.log("🏷️ Rendering active categories:", active);
+          // Sort descending from most products to least
+          active.sort((a: any, b: any) => (b.products || 0) - (a.products || 0));
+          console.log("🏷️ Rendering active categories sorted by product count:", active);
           setCategories(active);
         }
       } catch (err) {

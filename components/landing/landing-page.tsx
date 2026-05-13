@@ -4,6 +4,7 @@ import { ProductsSection } from "./products-section";
 import { SocialMediaSection } from "./social-media-section";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
+import { ShopByCategorySection } from "./shop-by-category-section";
 import { ShopByConcernSection } from "./shop-by-concern-section";
 import { OffersSection } from "./offers-section";
 import { PromoBannerSection } from "./promo-banner";
@@ -41,6 +42,7 @@ export function LandingPage() {
           <ShopByConcernSection />
           <ProductsSection />
           <PromoBannerSection />
+          <ShopByCategorySection />
           <SocialMediaSection />
         </main>
         <SiteFooter />
