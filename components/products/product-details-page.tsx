@@ -101,7 +101,7 @@ export function ProductDetailsPage({ product }: ProductDetailsPageProps) {
   };
 
   const [selectedSize, setSelectedSize] = useState<any>(
-    displaySizes[0] || { label: "", price: 0, oldPrice: null },
+    displaySizes.find((s: any) => !s.isOutOfStock) || displaySizes[0] || { label: "", price: 0, oldPrice: null, isOutOfStock: false }
   );
   const [quantity, setQuantity] = useState(1);
 
@@ -353,9 +353,12 @@ export function ProductDetailsPage({ product }: ProductDetailsPageProps) {
 
   useEffect(() => {
     if (displaySizes.length > 0) {
-      setSelectedSize(displaySizes[0]);
+      setSelectedSize(displaySizes.find((s: any) => !s.isOutOfStock) || displaySizes[0]);
     }
   }, [displaySizes]);
+
+  // Computed granular stock state integrating parent overrides & specific size variations
+  const isSizeOutOfStock = product.isOutOfStock || selectedSize.isOutOfStock === true;
 
   return (
     <section className="px-5 py-8 sm:px-8 lg:px-10 lg:py-12">
@@ -595,6 +598,7 @@ export function ProductDetailsPage({ product }: ProductDetailsPageProps) {
                   <div className="mt-3 flex flex-wrap gap-2">
                     {displaySizes.map((size: any) => {
                       const active = selectedSize.label === size.label;
+                      const outOfStock = size.isOutOfStock === true;
 
                       return (
                         <button
@@ -602,13 +606,18 @@ export function ProductDetailsPage({ product }: ProductDetailsPageProps) {
                           type="button"
                           onClick={() => setSelectedSize(size)}
                           className={[
-                            "rounded-full border border-line px-4 py-2 text-sm transition-colors",
+                            "rounded-full border px-4 py-2 text-sm transition-all duration-200",
                             active
-                              ? "border-accent bg-accent text-white"
-                              : "bg-surface text-foreground hover:border-accent/40 hover:bg-surface-strong",
+                              ? "border-accent bg-accent text-white ring-1 ring-accent/30"
+                              : outOfStock
+                                ? "bg-surface text-stone-400/70 border-line border-dashed line-through opacity-50 cursor-pointer"
+                                : "border-line bg-surface text-foreground hover:border-accent/40 hover:bg-surface-strong",
                           ].join(" ")}
                         >
                           {size.label}
+                          {outOfStock && (
+                            <span className="ml-1.5 text-[9px] font-bold uppercase opacity-60 select-none">(Out)</span>
+                          )}
                         </button>
                       );
                     })}
@@ -620,7 +629,7 @@ export function ProductDetailsPage({ product }: ProductDetailsPageProps) {
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    disabled={product.isOutOfStock}
+                    disabled={isSizeOutOfStock}
                     aria-label="Decrease quantity"
                     onClick={() =>
                       setQuantity((current) => Math.max(1, current - 1))
@@ -634,7 +643,7 @@ export function ProductDetailsPage({ product }: ProductDetailsPageProps) {
                   </div>
                   <button
                     type="button"
-                    disabled={product.isOutOfStock}
+                    disabled={isSizeOutOfStock}
                     aria-label="Increase quantity"
                     onClick={() => setQuantity((current) => current + 1)}
                     className="flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface text-foreground transition-colors hover:border-accent/40 hover:bg-surface-strong disabled:opacity-50"
@@ -644,13 +653,13 @@ export function ProductDetailsPage({ product }: ProductDetailsPageProps) {
                 </div>
 
                 <Button
-                  variant={product.isOutOfStock ? "outline" : "primary"}
+                  variant={isSizeOutOfStock ? "outline" : "primary"}
                   size="md"
-                  disabled={product.isOutOfStock}
+                  disabled={isSizeOutOfStock}
                   className="h-14 w-full justify-center px-8 text-sm cursor-pointer disabled:opacity-60"
                   type="button"
                   onClick={() => {
-                    if (product.isOutOfStock) return;
+                    if (isSizeOutOfStock) return;
                     addToCart(
                       product,
                       {
@@ -663,13 +672,13 @@ export function ProductDetailsPage({ product }: ProductDetailsPageProps) {
                     );
                   }}
                 >
-                  {!product.isOutOfStock && (
+                  {!isSizeOutOfStock && (
                     <FiShoppingBag className="text-[15px]" />
                   )}
-                  {product.isOutOfStock ? "Sold Out" : "Add to cart"}
+                  {isSizeOutOfStock ? "Sold Out" : "Add to cart"}
                 </Button>
 
-                {!product.isOutOfStock && (
+                {!isSizeOutOfStock && (
                   <Button
                     variant="outline"
                     size="md"

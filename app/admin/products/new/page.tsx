@@ -13,6 +13,8 @@ type SizeRow = {
   unit: string;
   price: string;
   oldPrice: string;
+  sku: string;
+  isOutOfStock: boolean;
 };
 
 type ReviewRow = {
@@ -58,6 +60,7 @@ export default function AdminProductCreatePage() {
   const [shortDescription, setShortDescription] = useState("");
   const [description, setDescription] = useState("");
   const [ingredientsText, setIngredientsText] = useState("");
+  const [isOutOfStock, setIsOutOfStock] = useState(false);
 
   const selectedCategorySubcategories = useMemo(() => {
     const category = categories.find((c) => c.id === categoryId);
@@ -65,7 +68,7 @@ export default function AdminProductCreatePage() {
   }, [categories, categoryId]);
 
   const [sizeRows, setSizeRows] = useState<SizeRow[]>([
-    { size: "", unit: "ml", price: "", oldPrice: "" },
+    { size: "", unit: "ml", price: "", oldPrice: "", sku: "", isOutOfStock: false },
   ]);
   const [howToUseRows, setHowToUseRows] = useState<string[]>([]);
   const [reviewRows, setReviewRows] = useState<ReviewRow[]>([]);
@@ -170,6 +173,8 @@ export default function AdminProductCreatePage() {
           label: `${r.size} ${r.unit}`,
           price: Number(r.price),
           oldPrice: r.oldPrice ? Number(r.oldPrice) : undefined,
+          sku: r.sku ? r.sku.trim() : undefined,
+          isOutOfStock: r.isOutOfStock === true,
         }));
 
       const parsedReviews = reviewRows
@@ -189,6 +194,7 @@ export default function AdminProductCreatePage() {
         brandId: brandId || undefined,
         subcategory: subcategory || undefined,
         hasOffer: parsedSizes.some((s) => s.oldPrice && s.oldPrice > s.price),
+        isOutOfStock: isOutOfStock === true,
         rating: Number(rating),
         reviewCount: Number(reviewCount),
         shortDescription,
@@ -361,6 +367,25 @@ export default function AdminProductCreatePage() {
                 ))}
               </select>
             </label>
+
+            {/* Global Out of Stock Override Toggle */}
+            <div className="flex items-center h-full pt-6">
+              <label className="flex items-center gap-3 cursor-pointer select-none group">
+                <div className="relative flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={isOutOfStock}
+                    onChange={(e) => setIsOutOfStock(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-10 h-6 bg-line rounded-full transition-colors peer-checked:bg-red-500 outline-none ring-1 ring-line/50" />
+                  <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4 shadow-sm" />
+                </div>
+                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-text-soft group-hover:text-foreground transition-colors">
+                  Mark entire product as Out of Stock
+                </span>
+              </label>
+            </div>
           </div>
         </section>
 
@@ -471,7 +496,7 @@ export default function AdminProductCreatePage() {
             {sizeRows.map((row, index) => (
               <div
                 key={index}
-                className="grid gap-3 border border-line bg-background p-4 lg:grid-cols-[1.5fr_1fr_1.2fr_1.2fr_auto]"
+                className="grid gap-4 border border-line bg-background p-5 lg:grid-cols-[1.2fr_0.8fr_1.2fr_1.2fr_1.5fr_1fr_auto] items-end"
               >
                 <label className="block">
                   <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-text-soft">Size Value</span>
@@ -487,8 +512,8 @@ export default function AdminProductCreatePage() {
                         ),
                       )
                     }
-                    placeholder="e.g. 15, 30, 150"
-                    className="w-full border border-line bg-background px-4 py-3 text-foreground outline-none focus:border-accent"
+                    placeholder="e.g. 15, 50, 150"
+                    className="w-full border border-line bg-surface px-4 py-2.5 text-foreground outline-none focus:border-accent text-sm"
                   />
                 </label>
                 <label className="block">
@@ -504,7 +529,7 @@ export default function AdminProductCreatePage() {
                         ),
                       )
                     }
-                    className="w-full border border-line bg-background px-4 py-3 text-foreground outline-none focus:border-accent"
+                    className="w-full border border-line bg-surface px-4 py-2.5 text-foreground outline-none focus:border-accent text-sm"
                   >
                     {sizeUnits.map((unit) => (
                       <option key={unit} value={unit}>
@@ -530,11 +555,11 @@ export default function AdminProductCreatePage() {
                       )
                     }
                     placeholder="750"
-                    className="w-full border border-line bg-background px-4 py-3 text-foreground outline-none focus:border-accent"
+                    className="w-full border border-line bg-surface px-4 py-2.5 text-foreground outline-none focus:border-accent text-sm"
                   />
                 </label>
                 <label className="block">
-                  <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-text-soft">Old price (BDT)</span>
+                  <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-text-soft">Old price</span>
                   <input
                     type="number"
                     min="0"
@@ -548,11 +573,57 @@ export default function AdminProductCreatePage() {
                         ),
                       )
                     }
-                    placeholder="850 (Optional)"
-                    className="w-full border border-line bg-background px-4 py-3 text-foreground outline-none focus:border-accent"
+                    placeholder="Optional"
+                    className="w-full border border-line bg-surface px-4 py-2.5 text-foreground outline-none focus:border-accent text-sm"
                   />
                 </label>
-                <div className="flex items-end pb-1.5">
+                <label className="block">
+                  <span className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-text-soft">Variant SKU (For Sync)</span>
+                  <input
+                    type="text"
+                    value={row.sku}
+                    onChange={(event) =>
+                      setSizeRows((current) =>
+                        current.map((item, idx) =>
+                          idx === index
+                            ? { ...item, sku: event.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, "") }
+                            : item,
+                        ),
+                      )
+                    }
+                    placeholder="Optional SKU mapping"
+                    className="w-full border border-line bg-surface px-4 py-2.5 text-foreground outline-none focus:border-accent text-sm placeholder:opacity-60"
+                  />
+                </label>
+
+                {/* Dynamic Size Stock Indicator Toggle */}
+                <div className="flex items-center justify-start h-[42px] pb-1 pl-1">
+                  <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                    <div className="relative flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={row.isOutOfStock}
+                        onChange={(event) =>
+                          setSizeRows((current) =>
+                            current.map((item, idx) =>
+                              idx === index
+                                ? { ...item, isOutOfStock: event.target.checked }
+                                : item,
+                            ),
+                          )
+                        }
+                        className="sr-only peer"
+                      />
+                      <div className="w-8 h-5 bg-line rounded-full transition-colors peer-checked:bg-red-500 outline-none ring-1 ring-line/40" />
+                      <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-3 shadow-sm" />
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-text-soft peer-checked:text-red-500">
+                      {row.isOutOfStock ? "Out of Stock" : "In Stock"}
+                    </span>
+                  </label>
+                </div>
+
+                <div className="flex items-center justify-end h-[42px]">
                   <Button
                     type="button"
                     variant="outline"
@@ -564,6 +635,7 @@ export default function AdminProductCreatePage() {
                           : current,
                       )
                     }
+                    className="h-9 w-9 p-0 flex items-center justify-center border-line text-text-soft hover:text-red-500"
                   >
                     <FiX className="text-[14px]" />
                   </Button>
@@ -578,7 +650,7 @@ export default function AdminProductCreatePage() {
                 onClick={() =>
                   setSizeRows((current) => [
                     ...current,
-                    { size: "", unit: "ml", price: "", oldPrice: "" },
+                    { size: "", unit: "ml", price: "", oldPrice: "", sku: "", isOutOfStock: false },
                   ])
                 }
               >
