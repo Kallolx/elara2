@@ -207,10 +207,12 @@ export function ProductCard({ product }: ProductCardProps) {
 
         <div className="relative block">
           <div className="relative h-[300px] w-full overflow-hidden">
-            <img
+            <Image
               src={imageSrc}
               alt={imageAlt}
-              className={`absolute inset-0 h-full w-full object-cover transition-all duration-500 ${
+              fill
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+              className={`object-cover transition-all duration-500 ${
                 product.isOutOfStock
                   ? "grayscale opacity-70 group-hover:scale-105"
                   : "group-hover:scale-105"

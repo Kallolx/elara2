@@ -58,6 +58,7 @@ export function ShopPage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [totalProducts, setTotalProducts] = useState(0);
 
   // ── filters ────────────────────────────────────────────────────────────────
   const [selectedCategoryId, setSelectedCategoryId] = useState("All");
@@ -172,6 +173,9 @@ export function ShopPage() {
             }
           }
           setHasMore(json.data.length === 12);
+          if (json.pagination) {
+            setTotalProducts(json.pagination.total);
+          }
         }
       } catch (e) {
         console.error(e);
@@ -632,7 +636,7 @@ export function ShopPage() {
                 </Button>
 
                 <span className="text-[11px] font-bold text-text-soft uppercase tracking-widest">
-                  {!loading && `${products.length} Products`}
+                  {!loading && `${totalProducts} Products`}
                 </span>
               </div>
 
@@ -710,21 +714,26 @@ export function ShopPage() {
               </div>
             ) : products.length > 0 ? (
               <>
-                <motion.div
+                <div
                   className="grid gap-5 grid-cols-2 xl:grid-cols-3"
-                  variants={shopGridVariants}
-                  initial="hidden"
-                  animate="show"
                   key={`${selectedCategoryId}-${selectedBrandId}-${selectedSubcategory}-${committedPrice[0]}-${committedPrice[1]}-${searchParam}`}
                 >
-                  {products.map((p) => (
-                    <motion.div key={p.id} variants={shopCardVariants}>
+                  {products.map((p, idx) => (
+                    <motion.div
+                      key={`${p.id}-${idx}`}
+                      initial={idx < 6 ? { opacity: 0, y: 20 } : false}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.4,
+                        delay: idx < 6 ? idx * 0.05 : 0,
+                      }}
+                    >
                       <ProductCard product={p} />
                     </motion.div>
                   ))}
-                </motion.div>
+                </div>
 
-                <div ref={loaderRef} className="py-12 flex justify-center">
+                <div ref={loaderRef} className="py-20 flex justify-center">
                   {isFetchingMore && (
                     <div className="flex items-center gap-3 bg-white border border-line px-7 py-3 rounded-full shadow-lg">
                       <FiRefreshCw className="animate-spin text-accent" />

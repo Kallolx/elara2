@@ -26,6 +26,7 @@ export default function SmoothScrollProvider({ children }: { children: React.Rea
     });
 
     lenisRef.current = lenis;
+    (window as any).lenis = lenis;
 
     // INSTANT HARD RESET: Immediately force viewport to the physical top coordinate on page mount
     lenis.scrollTo(0, { immediate: true });
@@ -58,6 +59,12 @@ export default function SmoothScrollProvider({ children }: { children: React.Rea
       }
     };
 
+    // AUTO-RESIZE: Monitor DOM shifts to keep scroll physics in sync with dynamic content
+    const resizeObserver = new ResizeObserver(() => {
+      lenis.resize();
+    });
+    resizeObserver.observe(document.body);
+
     document.addEventListener("visibilitychange", handleVisibility);
     window.addEventListener("focus", handleFocus);
 
@@ -65,18 +72,21 @@ export default function SmoothScrollProvider({ children }: { children: React.Rea
     return () => {
       clearTimeout(resizeTimer);
       cancelAnimationFrame(rafId);
+      resizeObserver.disconnect();
       
       document.removeEventListener("visibilitychange", handleVisibility);
       window.removeEventListener("focus", handleFocus);
 
       lenis.destroy();
       lenisRef.current = null;
+      (window as any).lenis = null;
       
       // Purge absolute system variables to ensure standard browser scroll takes back over instantly
       document.documentElement.classList.remove('lenis', 'lenis-smooth', 'lenis-scrolling', 'lenis-stopped');
       document.documentElement.style.scrollBehavior = "auto";
     };
-  }, [pathname]); // Crucial: Triggers exact height calculations and resets whenever path shifts
+  }, [pathname]);
+ // Crucial: Triggers exact height calculations and resets whenever path shifts
 
   return (
     <>
