@@ -173,6 +173,10 @@ export default function CheckoutPage() {
   const [addrArea, setAddrArea] = useState("");
   const [addrIsDefault, setAddrIsDefault] = useState(false);
 
+  // Real-time Automation Tracking
+  const [isLocationManuallySet, setIsLocationManuallySet] = useState(false);
+
+
   // Main Checkout Interaction States
   const [orderNotes, setOrderNotes] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cod"); // 'cod', 'ssl', 'bkash'
@@ -218,6 +222,58 @@ export default function CheckoutPage() {
     };
   }, [isAddressModalOpen, placedOrder]);
 
+  // 🔄 Reset manual-lock tracking whenever a new formulation modal initializes
+  useEffect(() => {
+    if (isAddressModalOpen) {
+      setIsLocationManuallySet(false);
+    }
+  }, [isAddressModalOpen]);
+
+  // 🔮 INTELLIGENT GEO-DETECTOR: Scans the street field as user types, and instantly populates 
+  // the Delivery Area / District dropdowns if an unambiguous sub-area match is identified.
+  useEffect(() => {
+    if (isLocationManuallySet || !addrStreet || addrStreet.length < 4 || deliveryZones.length === 0) {
+      return;
+    }
+
+    let matchedArea = "";
+    let matchedCity = "";
+
+    // 1. Flatten dynamic manifests and prioritize longer phrases to avoid false substrings (e.g. match 'Uttara Sector 4' before 'Uttara')
+    const parsingRegistry: { term: string; district: string }[] = [];
+    deliveryZones.forEach((zone) => {
+      if (zone.subAreas && zone.subAreas.length > 0) {
+        zone.subAreas.forEach((sub: string) => {
+          parsingRegistry.push({ term: sub, district: zone.district });
+        });
+      }
+      parsingRegistry.push({ term: zone.district, district: zone.district });
+    });
+
+    parsingRegistry.sort((a, b) => b.term.length - a.term.length);
+
+    // 2. Conduct Regex boundary-safe scan to ensure precise matching (skips character mid-word collisions)
+    for (const candidate of parsingRegistry) {
+      if (candidate.term.length < 3) continue;
+
+      const escapedTerm = candidate.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // Uses exact word boundary \b mechanics for robust language isolation
+      const matcher = new RegExp(`\\b${escapedTerm}\\b`, 'i');
+
+      if (matcher.test(addrStreet)) {
+        matchedArea = candidate.term === candidate.district ? "" : candidate.term;
+        matchedCity = candidate.district;
+        break; // Match achieved, lock highest-confidence entry
+      }
+    }
+
+    // 3. Auto-hydrate inputs transparently
+    if (matchedCity) {
+      setAddrCity(matchedCity);
+      setAddrDivision(matchedCity);
+      setAddrArea(matchedArea);
+    }
+  }, [addrStreet, deliveryZones, isLocationManuallySet]);
 
   // 🧬 Auto-flatten the 65 districts and their nested sub-areas into 1 unified searchable registry
   const flatLocationOptions = useMemo(() => {
@@ -922,6 +978,8 @@ export default function CheckoutPage() {
 
                     options={flatLocationOptions}
                     onChange={(val) => {
+                      setIsLocationManuallySet(true); // 🔒 Restrict automatic overwrite once manual intent is declared
+
                       if (val.includes(", ")) {
                         const [area, city] = val.split(", ");
                         setAddrArea(area);
@@ -933,6 +991,7 @@ export default function CheckoutPage() {
                         setAddrDivision(val);
                       }
                     }}
+
                   />
                 </div>
 
