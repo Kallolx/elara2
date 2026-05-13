@@ -624,30 +624,15 @@ export function ShopPage() {
           {/* Products — normal page flow */}
           <div className="space-y-2">
             {/* Top Toolbar: mobile trigger + count + Sort */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Button
-                  variant="primary"
-                  size="sm"
-                  className="h-10 px-5 rounded-full lg:hidden shadow-sm"
-                  onClick={() => setIsFilterOpen(true)}
-                >
-                  <FiFilter size={14} /> Filters
-                </Button>
-
-                <span className="text-[11px] font-bold text-text-soft uppercase tracking-widest">
-                  {!loading && `${totalProducts} Products`}
-                </span>
-              </div>
-
-              {/* Custom Sort Dropdown */}
-              <div className="relative">
+            <div className="flex items-center justify-between flex-row-reverse lg:flex-row">
+              {/* Desktop: Right-aligned Sort / Mobile: Left-aligned Sort */}
+              <div className="relative order-2 lg:order-none">
                 <button
                   onClick={() => setIsSortOpen((v) => !v)}
-                  className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-surface border border-line/40 hover:border-accent/40 transition-all group"
+                  className="flex items-center gap-2.5 sm:gap-3 px-4 sm:px-5 py-2.5 rounded-full bg-surface border border-line/40 hover:border-accent/40 transition-all group"
                 >
-                  <span className="text-[11px] font-bold text-text-soft uppercase tracking-widest group-hover:text-foreground">
-                    Sort:{" "}
+                  <span className="text-[10px] sm:text-[11px] font-bold text-text-soft uppercase tracking-widest group-hover:text-foreground">
+                    <span className="hidden sm:inline">Sort: </span>
                     <span className="text-foreground">
                       {sortKey === "featured" && "Featured"}
                       {sortKey === "newest" && "Newest"}
@@ -664,7 +649,6 @@ export function ShopPage() {
                 <AnimatePresence>
                   {isSortOpen && (
                     <>
-                      {/* Overlay to close */}
                       <div
                         className="fixed inset-0 z-[60]"
                         onClick={() => setIsSortOpen(false)}
@@ -674,7 +658,7 @@ export function ShopPage() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute right-0 mt-2 w-48 bg-white border border-line/40 rounded-2xl shadow-xl z-[70] p-1.5 overflow-hidden"
+                        className="absolute left-0 lg:left-auto lg:right-0 mt-2 w-48 bg-white border border-line/40 rounded-2xl shadow-xl z-[70] p-1.5 overflow-hidden"
                       >
                         {[
                           { id: "featured", label: "Featured" },
@@ -682,26 +666,42 @@ export function ShopPage() {
                           { id: "oldest", label: "Oldest" },
                           { id: "price-asc", label: "Price: Low to High" },
                           { id: "price-desc", label: "Price: High to Low" },
-                        ].map((item) => (
+                        ].map((opt) => (
                           <button
-                            key={item.id}
+                            key={opt.id}
                             onClick={() => {
-                              setSortKey(item.id as SortKey);
+                              setSortKey(opt.id as SortKey);
                               setIsSortOpen(false);
                             }}
-                            className={`w-full text-left px-4 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
-                              sortKey === item.id
-                                ? "bg-accent/10 text-accent"
+                            className={`w-full flex items-center px-4 py-2.5 text-[13px] rounded-xl transition-colors ${
+                              sortKey === opt.id
+                                ? "bg-accent text-white font-bold"
                                 : "text-text-soft hover:bg-surface-strong hover:text-foreground"
                             }`}
                           >
-                            {item.label}
+                            {opt.label}
                           </button>
                         ))}
                       </motion.div>
                     </>
                   )}
                 </AnimatePresence>
+              </div>
+
+              {/* Desktop: Left-aligned Filter + Count / Mobile: Right-aligned Filter Icon */}
+              <div className="flex items-center gap-4 order-1 lg:order-none">
+                <button
+                  type="button"
+                  className="h-10 w-10 flex lg:hidden items-center justify-center rounded-xl border border-line/40 bg-surface text-text-soft transition-all active:scale-95"
+                  onClick={() => setIsFilterOpen(true)}
+                >
+                  <FiFilter size={18} />
+                </button>
+                
+                {/* Product Count - Hidden on mobile */}
+                <span className="hidden lg:inline text-[11px] font-bold text-text-soft uppercase tracking-widest">
+                  {!loading && `${totalProducts} Products`}
+                </span>
               </div>
             </div>
 
@@ -721,11 +721,13 @@ export function ShopPage() {
                   {products.map((p, idx) => (
                     <motion.div
                       key={`${p.id}-${idx}`}
-                      initial={idx < 6 ? { opacity: 0, y: 20 } : false}
-                      animate={{ opacity: 1, y: 0 }}
+                      initial={{ opacity: 0, y: 25 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.1 }}
                       transition={{
-                        duration: 0.4,
-                        delay: idx < 6 ? idx * 0.05 : 0,
+                        duration: 0.5,
+                        ease: [0.16, 1, 0.3, 1],
+                        delay: (idx % 3) * 0.05, // Subtle stagger for grid rows
                       }}
                     >
                       <ProductCard product={p} />

@@ -153,7 +153,7 @@ export function ProductsSection() {
           variants={containerVariants}
           initial="hidden"
           whileInView="show"
-          viewport={{ once: true, margin: "-40px" }}
+          viewport={{ once: true, amount: 0.1 }}
         >
           {products.map((product) => (
             <motion.div

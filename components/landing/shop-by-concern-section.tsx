@@ -107,7 +107,7 @@ export function ShopByConcernSection() {
             variants={concernContainerVariants}
             initial="hidden"
             whileInView="show"
-            viewport={{ once: true, margin: "-40px" }}
+            viewport={{ once: true, amount: 0.1 }}
           >
             {concerns.map((concern) => (
               <motion.div

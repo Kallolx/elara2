@@ -21,6 +21,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { getCategoryIconPath } from "@/components/admin/categories-data";
 import { motion } from "framer-motion";
+import { ButtonLink } from "../ui/button";
 
 interface Category {
   id: string;
@@ -730,16 +731,16 @@ export function SiteHeader() {
                     key={cat.id}
                     href={`/shop?category=${cat.id}`}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center gap-3 p-2 rounded-lg border border-line/30 bg-background hover:bg-surface-strong transition-all"
+                    className="flex items-center gap-2.5 p-1.5 rounded-lg border border-line/20 bg-background hover:bg-surface-strong transition-all"
                   >
-                    <div className="w-10 h-10 rounded-md bg-surface-strong/50 p-1.5 shrink-0 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-md bg-surface-strong/50 p-1.5 shrink-0 flex items-center justify-center">
                       <img
                         src={getCategoryIconPath(cat.icon)}
                         alt=""
                         className="w-full h-full object-contain"
                       />
                     </div>
-                    <span className="text-sm font-medium text-foreground">
+                    <span className="text-[13px] font-medium text-foreground">
                       {cat.name}
                     </span>
                   </Link>
@@ -773,13 +774,14 @@ export function SiteHeader() {
                 </button>
               </div>
             ) : (
-              <Link
+              <ButtonLink
+                variant="outline"
                 href="/auth/signin"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="flex w-full items-center justify-center gap-2 bg-foreground text-background py-3 px-4 rounded-lg text-sm font-bold tracking-wider uppercase hover:bg-accent transition-all"
+                className="w-full !bg-accent !rounded-full h-12 !text-white transition-all"
               >
-                <FiUser className="text-[16px]" /> Sign In
-              </Link>
+                My account
+              </ButtonLink>
             )}
           </div>
         </div>

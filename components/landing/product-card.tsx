@@ -152,8 +152,8 @@ export function ProductCard({ product }: ProductCardProps) {
     >
       <div className="relative w-full overflow-hidden bg-surface">
         {discountPercentage > 0 ? (
-          <span className="absolute flex items-center gap-1 left-3 top-3 z-20 bg-black/5 px-2.5 py-1 text-sm text-accent rounded-full">
-            <MdLocalOffer className="w-4 h-4" />
+          <span className="absolute flex items-center gap-1 left-2 top-2 sm:left-3 sm:top-3 z-20 bg-black/5 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-sm text-accent rounded-full">
+            <MdLocalOffer className="w-3 h-3 sm:w-4 sm:h-4" />
             {discountPercentage}% OFF
           </span>
         ) : null}
@@ -189,7 +189,7 @@ export function ProductCard({ product }: ProductCardProps) {
               await toggleWishlist(product.id);
             }
           }}
-          className="absolute right-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-white/80 backdrop-blur-md transition-transform hover:scale-110 shadow-sm"
+          className="absolute right-2 top-2 sm:right-3 sm:top-3 z-20 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full border border-line bg-white/80 backdrop-blur-md transition-transform hover:scale-110 shadow-sm"
           aria-label={
             user?.wishlistIds?.includes(product.id || "")
               ? "Remove from wishlist"
@@ -197,7 +197,7 @@ export function ProductCard({ product }: ProductCardProps) {
           }
         >
           <FiHeart
-            className={`text-[15px] transition-colors ${
+            className={`text-[13px] sm:text-[15px] transition-colors ${
               user?.wishlistIds?.includes(product.id || "")
                 ? "fill-red-500 text-red-500"
                 : "text-text-soft hover:text-accent"
@@ -206,12 +206,13 @@ export function ProductCard({ product }: ProductCardProps) {
         </button>
 
         <div className="relative block">
-          <div className="relative h-[300px] w-full overflow-hidden">
+          <div className="relative h-[210px] sm:h-[300px] w-full overflow-hidden">
             <Image
               src={imageSrc}
               alt={imageAlt}
               fill
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+              priority={false}
               className={`object-cover transition-all duration-500 ${
                 product.isOutOfStock
                   ? "grayscale opacity-70 group-hover:scale-105"
@@ -223,41 +224,41 @@ export function ProductCard({ product }: ProductCardProps) {
       </div>
 
       {/* Content Body */}
-      <div className="flex flex-col flex-grow px-4 py-4 sm:px-5 sm:py-5">
+      <div className="flex flex-col flex-grow px-3 py-3 sm:px-5 sm:py-5">
         {/* Minimal Review Count Top of Name */}
-        <div className="mb-2 font-medium flex items-center">
+        <div className="mb-1 font-medium flex items-center">
           {(product.reviewCount || 0) > 0 ? (
-            <span className="text-sm text-green-600">
+            <span className="text-[11px] sm:text-sm text-green-600">
               {product.reviewCount}{" "}
               {product.reviewCount === 1 ? "Review" : "Reviews"}
             </span>
           ) : (
-            <span className="text-sm text-green-600">0 Reviews</span>
+            <span className="text-[11px] sm:text-sm text-green-600">0 Reviews</span>
           )}
         </div>
 
-        <h3 className="font-sans font-medium text-foreground mb-1.5 text-lg sm:text-xl leading-tight line-clamp-2 min-h-[2.6em]">
+        <h3 className="font-sans font-medium text-foreground mb-1 text-[15px] sm:text-xl leading-tight line-clamp-2 min-h-[2.4em]">
           {product.name}
         </h3>
       </div>
 
       {/* Footer: Price and Cart */}
-      <div className="mt-auto pt-1 px-4 pb-4 sm:px-5 sm:pb-5">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <p className="text-2xl font-medium text-foreground">
+      <div className="mt-auto pt-0.5 px-3 pb-3 sm:px-5 sm:pb-5">
+        <div className="flex items-center justify-between gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <p className="text-[18px] sm:text-2xl font-medium text-foreground">
               ৳{displayPrice}
             </p>
             {displayOldPrice && (
-              <p className="text-sm font-medium text-text-soft/60 line-through decoration-text-soft/40">
+              <p className="text-[11px] sm:text-sm font-medium text-text-soft/60 line-through decoration-text-soft/40">
                 ৳{displayOldPrice}
               </p>
             )}
           </div>
 
           {product.isOutOfStock ? (
-            <div className="flex h-8 px-2.5 shrink-0 items-center justify-center bg-stone-100 text-stone-500 rounded-full border border-stone-200/60 cursor-not-allowed">
-              <span className="text-[9px] font-bold uppercase tracking-widest">
+            <div className="flex h-7 px-2 shrink-0 items-center justify-center bg-stone-100 text-stone-500 rounded-full border border-stone-200/60 cursor-not-allowed">
+              <span className="text-[8px] font-bold uppercase tracking-widest">
                 Sold Out
               </span>
             </div>
@@ -273,9 +274,9 @@ export function ProductCard({ product }: ProductCardProps) {
                   oldPrice: displayOldPrice,
                 });
               }}
-              className="flex h-9 w-9 shrink-0 items-center justify-center bg-accent text-white transition-all hover:bg-accent-deep cursor-pointer rounded-full shadow-sm"
+              className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center bg-accent text-white transition-all hover:bg-accent-deep cursor-pointer rounded-full shadow-sm"
             >
-              <HiOutlineShoppingBag className="text-[16px]" />
+              <HiOutlineShoppingBag className="text-[14px] sm:text-[16px]" />
             </button>
           )}
         </div>
