@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -19,12 +19,124 @@ import {
   FiLock,
   FiTag,
   FiAlertCircle,
+  FiSearch,
 } from "react-icons/fi";
 import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { Button, ButtonLink } from "@/components/ui/button";
+
+// 🌟 Elegant Custom Searchable Select Control (ComboBox Mechanism)
+function SearchableSelect({
+  label,
+  value,
+  placeholder,
+  options,
+  onChange,
+  disabled = false,
+  direction = "down",
+}: {
+  label: string;
+  value: string;
+  placeholder: string;
+  options: string[];
+  onChange: (val: string) => void;
+  disabled?: boolean;
+  direction?: "up" | "down";
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [inputValue, setInputValue] = useState(value || "");
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // ⚡ Prop synchronization: sync local input with parent state updates
+  useEffect(() => {
+    setInputValue(value || "");
+  }, [value]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+        setInputValue(value || ""); // Safely revert to active selection if discarded
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [value]);
+
+  // Filter by typing directly in the main field
+  const filtered = options.filter((opt) =>
+    opt.toLowerCase().includes(inputValue.toLowerCase())
+  );
+
+  return (
+    <div className="relative space-y-2 w-full" ref={containerRef}>
+      <label className="block text-sm font-semibold text-text-soft">{label}</label>
+      
+      <div className="relative">
+        <input
+          type="text"
+          disabled={disabled}
+          value={inputValue}
+          onFocus={() => setIsOpen(true)}
+          onChange={(e) => {
+            setInputValue(e.target.value);
+            setIsOpen(true);
+          }}
+          placeholder={placeholder}
+          className={`w-full flex items-center justify-between border border-line rounded-lg pl-4 pr-10 py-3 text-sm text-foreground outline-none focus:border-accent focus:ring-1 focus:ring-accent/10 transition-all placeholder:text-text-soft/50 ${
+            disabled 
+              ? "bg-surface-strong/20 cursor-not-allowed text-text-soft/40" 
+              : "bg-background cursor-pointer font-medium"
+          }`}
+        />
+        <FiChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 transition-transform duration-200 text-text-soft pointer-events-none ${isOpen ? "rotate-180" : ""}`} />
+      </div>
+
+      <AnimatePresence>
+        {isOpen && !disabled && (
+          <motion.div
+            initial={{ opacity: 0, y: direction === "up" ? -5 : 5, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: direction === "up" ? -5 : 5, scale: 0.98 }}
+            transition={{ duration: 0.15 }}
+            className={`absolute z-[100] w-full bg-surface border border-line rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[260px] ${
+              direction === "up" ? "bottom-full mb-2" : "top-full mt-1"
+            }`}
+          >
+            <div className="flex-1 overflow-y-auto py-1.5 custom-scrollbar bg-surface" data-lenis-prevent>
+              {filtered.length > 0 ? (
+                filtered.map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => {
+                      onChange(opt);
+                      setInputValue(opt);
+                      setIsOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 text-xs font-medium transition-colors border-l-2 ${
+                      value === opt 
+                        ? "border-accent bg-accent/5 text-accent font-bold" 
+                        : "border-transparent text-foreground/80 hover:bg-background hover:text-foreground"
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                ))
+              ) : (
+                <div className="px-4 py-4 text-[11px] text-center text-text-soft/60 italic">
+                  No results matching "{inputValue}"
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 // Address Item interface
 type SavedAddress = {
@@ -38,6 +150,7 @@ type SavedAddress = {
   area: string;
   isDefault: boolean;
 };
+
 
 export default function CheckoutPage() {
   const { cartItems, cartSubtotal, clearCart } = useCart();
@@ -81,6 +194,47 @@ export default function CheckoutPage() {
     }
   }, [user]);
 
+  // API Hook for dynamic zones
+  const [deliveryZones, setDeliveryZones] = useState<any[]>([]);
+
+  useEffect(() => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+    fetch(`${baseUrl}/delivery-zones`)
+      .then(res => res.json())
+      .then(json => {
+        if (json.success) setDeliveryZones(json.data);
+      })
+  }, []);
+
+  // 🔒 Prevent background scroll bleeding when modal overlays are active
+  useEffect(() => {
+    if (isAddressModalOpen || placedOrder) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isAddressModalOpen, placedOrder]);
+
+
+  // 🧬 Auto-flatten the 65 districts and their nested sub-areas into 1 unified searchable registry
+  const flatLocationOptions = useMemo(() => {
+    const options: string[] = [];
+    deliveryZones.forEach((zone: any) => {
+      if (!zone.subAreas || zone.subAreas.length === 0) {
+        options.push(zone.district);
+      } else {
+        zone.subAreas.forEach((area: string) => {
+          options.push(`${area}, ${zone.district}`);
+        });
+      }
+    });
+    return options.sort((a, b) => a.localeCompare(b));
+  }, [deliveryZones]);
+
+
   // ---- CALCULATIONS ----
   const selectedAddr = useMemo(
     () => savedAddresses.find((a) => a.id === selectedAddressId),
@@ -101,13 +255,19 @@ export default function CheckoutPage() {
 
   const shipping = useMemo(() => {
     if (!selectedAddr) return 0;
-    return selectedAddr.division.toLowerCase().includes("dhaka") ? 60 : 120;
-  }, [selectedAddr]);
+    // Robust dynamic DB lookup for direct district-to-cost reconciliation!
+    const matched = deliveryZones.find(z => 
+      z.district.toLowerCase() === selectedAddr.city.toLowerCase() ||
+      z.district.toLowerCase() === selectedAddr.division.toLowerCase()
+    );
+    return matched ? matched.charge : 120; // Reliable fallback
+  }, [selectedAddr, deliveryZones]);
 
   const finalTotal = useMemo(() => {
     const base = cartSubtotal + shipping + tax - appliedDiscount;
     return base < 0 ? 0 : base;
   }, [cartSubtotal, shipping, tax, appliedDiscount]);
+
 
   // ---- HANDLERS ----
   const handleSaveNewAddress = (e: React.FormEvent) => {
@@ -637,22 +797,24 @@ export default function CheckoutPage() {
       {/* --- ADD ADDRESS MODAL OVERLAY --- */}
       <AnimatePresence>
         {isAddressModalOpen && (
-          <div className="fixed inset-0 z-[999] flex items-center justify-center px-4 py-10 sm:py-0">
-            {/* Dynamic Backdrop */}
+          <div className="fixed inset-0 z-[999] overflow-y-auto bg-black/60 backdrop-blur-sm flex items-start justify-center px-4 py-12 sm:py-16" data-lenis-prevent>
+
+            {/* Clickable Overlay Backdrop (Absolute inside fixed container) */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsAddressModalOpen(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-pointer"
+              className="absolute inset-0 -z-10 cursor-pointer"
             />
 
             {/* Modal Container Box */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative w-full max-w-xl bg-surface rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ duration: 0.2 }}
+              className="relative w-full max-w-xl bg-surface rounded-2xl shadow-2xl overflow-visible flex flex-col"
             >
               {/* Modal Header */}
               <div className="flex items-center justify-between px-6 py-5 border-b border-line">
@@ -667,11 +829,12 @@ export default function CheckoutPage() {
                 </button>
               </div>
 
-              {/* Modal Form Scrollable Body */}
+              {/* Modal Form Body */}
               <form
                 onSubmit={handleSaveNewAddress}
-                className="flex-1 overflow-y-auto px-6 py-6 space-y-6"
+                className="px-6 py-6 space-y-6 overflow-visible"
               >
+
                 {/* Type Select (Home, Office, Others) */}
                 <div className="flex items-center gap-6 pb-2">
                   {(["Home", "Office", "Others"] as const).map((t) => (
@@ -745,90 +908,36 @@ export default function CheckoutPage() {
                   />
                 </div>
 
-                {/* Grid: State/Division & City */}
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-text-soft">
-                      State/Division
-                    </label>
-                    <div className="relative">
-                      <select
-                        required
-                        value={addrDivision}
-                        onChange={(e) => setAddrDivision(e.target.value)}
-                        className="w-full appearance-none bg-background border border-line rounded-lg px-4 py-3 text-sm text-foreground outline-none focus:border-accent cursor-pointer transition-colors"
-                      >
-                        <option value="" disabled>
-                          Select Division
-                        </option>
-                        <option value="Dhaka">Dhaka</option>
-                        <option value="Chittagong">Chittagong</option>
-                        <option value="Sylhet">Sylhet</option>
-                        <option value="Khulna">Khulna</option>
-                        <option value="Rajshahi">Rajshahi</option>
-                        <option value="Barishal">Barishal</option>
-                        <option value="Rangpur">Rangpur</option>
-                        <option value="Mymensingh">Mymensingh</option>
-                      </select>
-                      <FiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-text-soft pointer-events-none" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-text-soft">
-                      City
-                    </label>
-                    <div className="relative">
-                      <select
-                        required
-                        value={addrCity}
-                        onChange={(e) => setAddrCity(e.target.value)}
-                        className="w-full appearance-none bg-surface-strong/40 border border-line rounded-lg px-4 py-3 text-sm text-foreground outline-none focus:border-accent cursor-pointer transition-colors"
-                      >
-                        <option value="" disabled>
-                          Select city
-                        </option>
-                        {addrDivision === "Dhaka" ? (
-                          <>
-                            <option value="Dhaka City">Dhaka City</option>
-                            <option value="Gazipur">Gazipur</option>
-                            <option value="Narayanganj">Narayanganj</option>
-                          </>
-                        ) : (
-                          <option value="Generic City">
-                            Select Division First
-                          </option>
-                        )}
-                      </select>
-                      <FiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-text-soft pointer-events-none" />
-                    </div>
-                  </div>
+                {/* Single Unified Searchable Selector (District + Area Flatted) */}
+                <div className="relative z-[60]">
+                  <SearchableSelect
+                    label="Delivery Area / Upazila"
+                    placeholder="Start typing your area (e.g. Mirpur, Dhanmondi, CEPZ...)"
+                    value={
+                      addrArea && addrCity 
+                        ? `${addrArea}, ${addrCity}` 
+                        : addrArea || addrCity
+                    }
+                    direction="down"
+
+                    options={flatLocationOptions}
+                    onChange={(val) => {
+                      if (val.includes(", ")) {
+                        const [area, city] = val.split(", ");
+                        setAddrArea(area);
+                        setAddrCity(city);
+                        setAddrDivision(city);
+                      } else {
+                        setAddrArea(val);
+                        setAddrCity(val);
+                        setAddrDivision(val);
+                      }
+                    }}
+                  />
                 </div>
 
-                {/* Area Field */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-text-soft">
-                    Area
-                  </label>
-                  <div className="relative">
-                    <select
-                      required
-                      value={addrArea}
-                      onChange={(e) => setAddrArea(e.target.value)}
-                      className="w-full appearance-none bg-surface-strong/40 border border-line rounded-lg px-4 py-3 text-sm text-foreground outline-none focus:border-accent cursor-pointer transition-colors"
-                    >
-                      <option value="" disabled>
-                        Select area
-                      </option>
-                      <option value="Mirpur">Mirpur</option>
-                      <option value="Uttara">Uttara</option>
-                      <option value="Dhanmondi">Dhanmondi</option>
-                      <option value="Gulshan">Gulshan</option>
-                      <option value="Banani">Banani</option>
-                      <option value="Others">Others</option>
-                    </select>
-                    <FiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-text-soft pointer-events-none" />
-                  </div>
-                </div>
+
+
 
                 {/* Checkbox Default */}
                 <label className="flex items-center gap-3 cursor-pointer group">
@@ -862,7 +971,8 @@ export default function CheckoutPage() {
       {/* SUCCESS ORDER MODAL (UNCHANGED FUNCTIONAL) */}
       <AnimatePresence>
         {placedOrder && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4" data-lenis-prevent>
+
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

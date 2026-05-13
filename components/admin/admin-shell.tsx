@@ -23,6 +23,7 @@ import {
   FiChevronDown,
   FiExternalLink,
   FiTag,
+  FiMapPin,
 } from "react-icons/fi";
 import { ButtonLink } from "../ui/button";
 
@@ -54,9 +55,13 @@ const navigationGroups = [
   },
   {
     title: "Site Engine",
-    items: [{ href: "/admin/site", label: "Settings", icon: FiSettings }],
+    items: [
+      { href: "/admin/site", label: "Settings", icon: FiSettings },
+      { href: "/admin/delivery", label: "Delivery Fees", icon: FiMapPin },
+    ],
   },
 ];
+
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
