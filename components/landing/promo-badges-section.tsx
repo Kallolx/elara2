@@ -4,10 +4,10 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 
 const BADGES = [
-  { id: "buy1", src: "/nav/buy1.png", label: "Buy 1 Get 1" },
-  { id: "flash", src: "/nav/flash.png", label: "Flash Sale" },
-  { id: "kbrands", src: "/nav/kbrands.png", label: "K-Brands" },
-  { id: "eid", src: "/nav/eid.png", label: "Eid Offer" },
+  { id: "buy1", src: "/nav/buy1.webp", label: "Buy 1 Get 1" },
+  { id: "flash", src: "/nav/flash.webp", label: "Flash Sale" },
+  { id: "kbrands", src: "/nav/kbrands.webp", label: "K-Brands" },
+  { id: "eid", src: "/nav/eid.webp", label: "Eid Offer" },
 ];
 
 export function PromoBadgesSection() {
