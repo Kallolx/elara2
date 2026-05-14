@@ -403,22 +403,22 @@ export function SiteHeader() {
           {/* Restored Wishlist Shortcut */}
           <Link
             href="/profile/wishlist"
-            className="hidden lg:flex h-10 w-10 items-center justify-center rounded-full border border-line bg-background text-text-soft transition-colors hover:border-text-soft hover:text-foreground outline-none cursor-pointer"
+            className="group hidden lg:flex h-10 w-10 items-center justify-center rounded-full border border-line bg-background text-text-soft transition-colors hover:border-text-soft hover:text-foreground outline-none cursor-pointer"
             aria-label="Wishlist"
           >
-            <FiHeart className="text-[16px]" />
+            <img src="/nav/love.svg" alt="Wishlist" className="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity" />
           </Link>
 
           {/* Shopping Cart */}
           <button
             type="button"
             onClick={() => setIsCartOpen(true)}
-            className="relative flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-line bg-background text-text-soft transition-colors hover:border-text-soft hover:text-foreground outline-none cursor-pointer"
+            className="group relative flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-line bg-background text-text-soft transition-colors hover:border-text-soft hover:text-foreground outline-none cursor-pointer"
             aria-label="Cart"
           >
-            <FiShoppingBag className="text-[15px] sm:text-[16px]" />
+            <img src="/nav/cart.svg" alt="Cart" className="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity" />
             {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-white animate-pulse">
+              <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-white shadow-sm ring-2 ring-background">
                 {cartCount}
               </span>
             )}
@@ -435,7 +435,7 @@ export function SiteHeader() {
                   {user.name.charAt(0)}
                 </button>
                 {activeOrdersCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-white animate-pulse">
+                  <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-white shadow-sm ring-2 ring-background">
                     {activeOrdersCount}
                   </span>
                 )}
@@ -495,10 +495,10 @@ export function SiteHeader() {
             ) : (
               <Link
                 href="/auth/signin"
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-background text-text-soft transition-colors hover:border-text-soft hover:text-foreground outline-none cursor-pointer"
+                className="group flex h-10 w-10 items-center justify-center rounded-full border border-line bg-background text-text-soft transition-colors hover:border-text-soft hover:text-foreground outline-none cursor-pointer"
                 aria-label="Login"
               >
-                <FiUser className="text-[16px]" />
+                <img src="/nav/user.svg" alt="User" className="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity" />
               </Link>
             )}
           </div>
@@ -532,15 +532,15 @@ export function SiteHeader() {
             isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
-          <div className="flex items-center justify-between px-4 border-b border-line bg-background/50">
-            <span className="font-display font-semibold tracking-tight text-foreground text-lg">
-              <img src="/logo.svg" alt="logo" className="w-24 h-24" />
-            </span>
+          <div className="flex items-center justify-between px-6 py-5 border-b border-line/40">
+            <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>
+              <img src="/logo.svg" alt="Elara" className="w-24 h-auto" />
+            </Link>
             <button
               onClick={() => setIsMobileMenuOpen(false)}
-              className="h-8 w-8 flex items-center justify-center rounded-full border border-line bg-surface text-text-soft"
+              className="h-9 w-9 flex items-center justify-center rounded-full border border-line bg-surface text-text-soft hover:text-foreground transition-colors"
             >
-              <FiX className="text-[16px]" />
+              <FiX className="text-lg" />
             </button>
           </div>
 
@@ -558,8 +558,8 @@ export function SiteHeader() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search products..."
-                  className="w-full bg-background border border-line rounded-lg pl-10 pr-4 py-2.5 text-sm placeholder-text-soft/60 outline-none focus:border-accent transition-colors"
+                  placeholder="Search routines..."
+                  className="w-full bg-surface-strong/30 border-none rounded-xl pl-10 pr-4 py-3 text-sm placeholder-text-soft/40 outline-none focus:ring-2 focus:ring-accent/10 transition-all"
                 />
               </form>
 
@@ -661,7 +661,7 @@ export function SiteHeader() {
                 Explore Shop
               </Link>
               <Link
-                href="/shop?tag=new"
+                href="/shop?sort=newest"
                 className="text-base font-medium text-foreground hover:text-accent transition-colors flex items-center gap-3"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
@@ -673,11 +673,11 @@ export function SiteHeader() {
                 <>
                   <Link
                     href="/orders"
-                    className="text-base font-medium text-foreground hover:text-accent transition-colors flex items-center justify-between"
+                    className="text-base font-medium text-foreground hover:text-accent transition-colors flex items-center justify-between group"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <div className="flex items-center gap-3">
-                      <FiBag className="w-5 h-5 text-text-soft" />
+                      <img src="/nav/cart.svg" alt="" className="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity" />
                       My Orders
                     </div>
                     {activeOrdersCount > 0 && (
@@ -688,21 +688,21 @@ export function SiteHeader() {
                   </Link>
                   <Link
                     href="/profile"
-                    className="text-base font-medium text-foreground hover:text-accent transition-colors flex items-center justify-between"
+                    className="text-base font-medium text-foreground hover:text-accent transition-colors flex items-center justify-between group"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <div className="flex items-center gap-3">
-                      <FiUser className="w-5 h-5 text-text-soft" />
+                      <img src="/nav/user.svg" alt="" className="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity" />
                       My Profile
                     </div>
                   </Link>
                   <Link
                     href="/profile/wishlist"
-                    className="text-base font-medium text-foreground hover:text-accent transition-colors flex items-center justify-between"
+                    className="text-base font-medium text-foreground hover:text-accent transition-colors flex items-center justify-between group"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <div className="flex items-center gap-3">
-                      <FiHeart className="w-5 h-5 text-text-soft" />
+                      <img src="/nav/love.svg" alt="" className="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity" />
                       My Wishlist
                     </div>
                   </Link>
@@ -731,16 +731,16 @@ export function SiteHeader() {
                     key={cat.id}
                     href={`/shop?category=${cat.id}`}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center gap-2.5 p-1.5 rounded-lg border border-line/20 bg-background hover:bg-surface-strong transition-all"
+                    className="flex items-center gap-3 py-1 text-text-soft hover:text-accent transition-colors"
                   >
-                    <div className="w-8 h-8 rounded-md bg-surface-strong/50 p-1.5 shrink-0 flex items-center justify-center">
+                    <div className="w-5 h-5 shrink-0 flex items-center justify-center opacity-60">
                       <img
                         src={getCategoryIconPath(cat.icon)}
                         alt=""
                         className="w-full h-full object-contain"
                       />
                     </div>
-                    <span className="text-[13px] font-medium text-foreground">
+                    <span className="text-[14px] font-medium">
                       {cat.name}
                     </span>
                   </Link>
@@ -769,8 +769,8 @@ export function SiteHeader() {
                     </Link>
                   </div>
                 </div>
-                <button onClick={logout} className="text-red-600 p-2">
-                  <FiLogOut className="text-[18px]" />
+                <button onClick={logout} className="text-red-500 p-2 hover:bg-red-50 rounded-full transition-colors">
+                  <img src="/nav/trash.svg" alt="Logout" className="w-5 h-5 [filter:sepia(1)_saturate(10000%)_hue-rotate(340deg)]" />
                 </button>
               </div>
             ) : (

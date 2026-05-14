@@ -18,17 +18,17 @@ import { FaApple, FaGooglePlay, FaTiktok } from "react-icons/fa";
 import { useStore } from "@/context/StoreContext";
 
 const policyLinks = [
-  { label: "Return Policy", href: "#", icon: FiRefreshCcw },
-  { label: "Shipping Policy", href: "#", icon: FiTruck },
-  { label: "Terms & Conditions", href: "#", icon: FiFileText },
-  { label: "Privacy Policy", href: "#", icon: FiShield },
+  { label: "Return Policy", href: "#", icon: "/nav/return.svg" },
+  { label: "Shipping Policy", href: "#", icon: "/nav/shipping.svg" },
+  { label: "Terms & Conditions", href: "#", icon: "/nav/terms.svg" },
+  { label: "Privacy Policy", href: "#", icon: "/nav/privacy.svg" },
 ];
 
 const insightLinks = [
-  { label: "About Us", href: "#", icon: FiInfo },
-  { label: "Contact Us", href: "#", icon: FiPhoneCall },
-  { label: "My Account", href: "#", icon: FiUser },
-  { label: "FAQ", href: "#", icon: FiHelpCircle },
+  { label: "About Us", href: "#", icon: "/nav/about.svg" },
+  { label: "Contact Us", href: "#", icon: "/nav/contact.svg" },
+  { label: "My Account", href: "#", icon: "/nav/user.svg" },
+  { label: "FAQ", href: "#", icon: "/nav/faq.svg" },
 ];
 
 export function SiteFooter() {
@@ -93,7 +93,11 @@ export function SiteFooter() {
                           href={link.href}
                           className="group flex items-center gap-3 hover:text-white transition-colors"
                         >
-                          <link.icon className="text-[18px] text-white/50 group-hover:text-white transition-colors" />
+                          <img
+                            src={link.icon}
+                            alt=""
+                            className="w-5 h-5 opacity-50 group-hover:opacity-100 transition-opacity brightness-0 invert"
+                          />
                           {link.label}
                         </a>
                       </li>
@@ -116,7 +120,11 @@ export function SiteFooter() {
                           href={link.href}
                           className="group flex items-center gap-3 hover:text-white transition-colors"
                         >
-                          <link.icon className="text-[18px] text-white/50 group-hover:text-white transition-colors" />
+                          <img
+                            src={link.icon}
+                            alt=""
+                            className="w-5 h-5 opacity-50 group-hover:opacity-100 transition-opacity brightness-0 invert"
+                          />
                           {link.label}
                         </a>
                       </li>
@@ -130,30 +138,46 @@ export function SiteFooter() {
                 <a
                   href="#"
                   aria-label="Facebook"
-                  className="text-white hover:scale-110 transition-transform"
+                  className="hover:scale-110 transition-transform"
                 >
-                  <FiFacebook className="text-[22px]" />
+                  <img
+                    src="/nav/facebook.svg"
+                    alt="Facebook"
+                    className="w-6 h-6 brightness-0 invert"
+                  />
                 </a>
                 <a
                   href="#"
                   aria-label="Tiktok"
-                  className="text-white hover:scale-110 transition-transform"
+                  className="hover:scale-110 transition-transform"
                 >
-                  <FaTiktok className="text-[22px]" />
+                  <img
+                    src="/nav/tik-tok.svg"
+                    alt="Tiktok"
+                    className="w-6 h-6 brightness-0 invert"
+                  />
                 </a>
                 <a
                   href="#"
                   aria-label="Youtube"
-                  className="text-white hover:scale-110 transition-transform"
+                  className="hover:scale-110 transition-transform"
                 >
-                  <FiYoutube className="text-[22px]" />
+                  <img
+                    src="/nav/youtube.svg"
+                    alt="Youtube"
+                    className="w-6 h-6 brightness-0 invert"
+                  />
                 </a>
                 <a
                   href="#"
                   aria-label="Instagram"
-                  className="text-white hover:scale-110 transition-transform"
+                  className="hover:scale-110 transition-transform"
                 >
-                  <FiInstagram className="text-[22px]" />
+                  <img
+                    src="/nav/instagram.svg"
+                    alt="Instagram"
+                    className="w-6 h-6 brightness-0 invert"
+                  />
                 </a>
               </div>
             </div>

@@ -113,25 +113,29 @@ export function ProductsSection() {
       id="shop"
       className="mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-10"
     >
-      <motion.div
-        className="mb-6 flex flex-col items-center justify-between sm:flex-row sm:text-left"
-        initial={{ opacity: 0, y: 15 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
+      <div
+        className="mb-1 flex flex-row items-center justify-between sm:mb-8"
       >
-        <div>
-          <h2 className="flex items-center gap-3 text-3xl font-serif text-text sm:text-4xl">
-            <img
-              src="/new.png"
-              alt="New"
-              className="h-8 w-8 sm:h-10 sm:w-10 object-contain"
-            />
+        <div className="flex items-center gap-2 sm:gap-3">
+          <img
+            src="/new.png"
+            alt="New"
+            className="h-6 w-6 sm:h-10 sm:w-10 object-contain"
+          />
+          <h2 className="text-[17px] font-serif text-foreground sm:text-4xl">
             Recent Arrivals
           </h2>
         </div>
 
-        {/* Navigation Arrows Inline Desktop, Bottom on Mobile */}
+        <Link
+          href="/shop"
+          className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-accent/10 text-accent text-[11px] font-bold sm:hidden"
+        >
+          See All
+          <FiChevronRight className="text-xs" />
+        </Link>
+
+        {/* Navigation Arrows Inline Desktop */}
         <div className="hidden sm:flex items-center gap-2">
           <button
             onClick={scrollPrev}
@@ -148,10 +152,10 @@ export function ProductsSection() {
             <FiChevronRight className="text-xl" />
           </button>
         </div>
-      </motion.div>
+      </div>
 
       {/* Slider Viewport */}
-      <div className="overflow-hidden py-4" ref={emblaRef}>
+      <div className="overflow-hidden pt-0 pb-4 sm:py-4" ref={emblaRef}>
         <div className="flex -ml-4 touch-pan-y">
           {products.map((product) => (
             <div
@@ -166,23 +170,8 @@ export function ProductsSection() {
         </div>
       </div>
 
-      {/* Mobile Navigation arrows */}
-      <div className="mt-6 flex justify-center gap-3 sm:hidden">
-        <button
-          onClick={scrollPrev}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface text-text"
-        >
-          <FiChevronLeft className="text-xl" />
-        </button>
-        <button
-          onClick={scrollNext}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface text-text"
-        >
-          <FiChevronRight className="text-xl" />
-        </button>
-      </div>
 
-      <div className="mt-8 flex justify-center">
+      <div className="hidden sm:flex mt-8 justify-center">
         <Link
           href="/shop"
           className="inline-flex h-12 items-center justify-center rounded-full border border-line px-10 text-sm font-medium text-text transition-all duration-300 hover:bg-text hover:text-background hover:border-text"

@@ -159,10 +159,10 @@ export function ProductCard({ product }: ProductCardProps) {
         ) : null}
 
         {isFlashSale && !product.isOutOfStock && (
-          <div className="absolute left-3 top-12 z-20">
-            <span className="flex items-center gap-1 bg-red-600/90 backdrop-blur-sm px-2.5 py-1 text-[12px] font-medium text-white rounded-full shadow-sm">
+          <div className="absolute left-2 top-8 sm:left-3 sm:top-12 z-20">
+            <span className="flex items-center gap-1 bg-red-600/90 backdrop-blur-sm px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-[12px] font-medium text-white rounded-full shadow-sm">
               <FiZap
-                className="w-3 h-3 text-yellow-500"
+                className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-yellow-500"
                 fill="currentColor"
               />
               Flash Sale
@@ -196,11 +196,13 @@ export function ProductCard({ product }: ProductCardProps) {
               : "Add to wishlist"
           }
         >
-          <FiHeart
-            className={`text-[13px] sm:text-[15px] transition-colors ${
+          <img
+            src="/nav/love.svg"
+            alt="Wishlist"
+            className={`w-4 h-4 sm:w-5 h-5 transition-all ${
               user?.wishlistIds?.includes(product.id || "")
-                ? "fill-red-500 text-red-500"
-                : "text-text-soft hover:text-accent"
+                ? "brightness-100 [filter:sepia(1)_saturate(10000%)_hue-rotate(340deg)]"
+                : "opacity-60 group-hover:opacity-100"
             }`}
           />
         </button>
@@ -274,9 +276,9 @@ export function ProductCard({ product }: ProductCardProps) {
                   oldPrice: displayOldPrice,
                 });
               }}
-              className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center bg-accent text-white transition-all hover:bg-accent-deep cursor-pointer rounded-full shadow-sm"
+              className="flex h-10 w-10 sm:h-9 sm:w-9 shrink-0 items-center justify-center bg-accent text-white transition-all hover:bg-accent-deep cursor-pointer rounded-full shadow-sm"
             >
-              <HiOutlineShoppingBag className="text-[14px] sm:text-[16px]" />
+              <img src="/nav/cart.svg" alt="" className="w-5 h-5 sm:w-5 sm:h-5 brightness-0 invert" />
             </button>
           )}
         </div>

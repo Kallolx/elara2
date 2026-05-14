@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 
 export function PromoBannerSection() {
   return (
-    <section className="relative mx-auto max-w-7xl px-5 sm:px-8 lg:px-10 py-8 sm:py-16 mt-4 sm:mt-10 mb-8 sm:mb-10 overflow-visible">
+    <section className="relative mx-auto max-w-7xl px-5 sm:px-8 lg:px-10 py-4 sm:py-16 mt-6 sm:mt-10 mb-4 sm:mb-4 overflow-visible">
       {/* Backer Container (Gradient Background mapped to Site Themes) */}
       <div className="relative w-full h-[540px] md:h-[360px] rounded-3xl overflow-hidden md:overflow-visible bg-gradient-to-br from-surface via-surface-strong/70 to-[#efe4d9] border border-line/40 flex flex-col md:flex-row items-center">
         

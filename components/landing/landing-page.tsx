@@ -8,6 +8,7 @@ import { ShopByCategorySection } from "./shop-by-category-section";
 import { ShopByConcernSection } from "./shop-by-concern-section";
 import { OffersSection } from "./offers-section";
 import { PromoBannerSection } from "./promo-banner";
+import { PromoBadgesSection } from "./promo-badges-section";
 
 export function LandingPage() {
   return (
@@ -35,15 +36,34 @@ export function LandingPage() {
 
       <div className="relative z-10 flex flex-col min-h-screen">
         <SiteHeader />
-        <main id="top" className="flex-grow">
-          <HeroSection />
-          <CategoriesSection />
-          <OffersSection />
-          <ShopByConcernSection />
-          <ProductsSection />
-          <PromoBannerSection />
-          <ShopByCategorySection />
-          <SocialMediaSection />
+        <main id="top" className="flex-grow flex flex-col">
+          <div className="order-1">
+            <HeroSection />
+          </div>
+          <div className="order-2 lg:order-6 pt-6 lg:pt-0">
+            <ProductsSection />
+          </div>
+          <div className="order-3 lg:order-3">
+            <CategoriesSection />
+          </div>
+          <div className="order-4 lg:order-2">
+            <PromoBadgesSection />
+          </div>
+          <div className="order-5 lg:order-4">
+            <OffersSection />
+          </div>
+          <div className="order-6 lg:order-5">
+            <ShopByConcernSection />
+          </div>
+          <div className="order-7 lg:order-7">
+            <PromoBannerSection />
+          </div>
+          <div className="order-8 lg:order-8">
+            <ShopByCategorySection />
+          </div>
+          <div className="order-9 lg:order-9">
+            <SocialMediaSection />
+          </div>
         </main>
         <SiteFooter />
       </div>

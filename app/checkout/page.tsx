@@ -512,7 +512,8 @@ export default function CheckoutPage() {
                   {/* Shipping Component Wrapper */}
                   <div className="p-6 sm:p-8 border-b border-line/60">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-                      <h2 className="font-display text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
+                      <h2 className="font-display text-xl sm:text-2xl font-semibold tracking-tight text-foreground flex items-center gap-3">
+                        <img src="/nav/shipping.svg" alt="" className="w-6 h-6" />
                         Shipping Address
                       </h2>
                       <Button
@@ -602,59 +603,76 @@ export default function CheckoutPage() {
 
                   {/* Payment Component Wrapper */}
                   <div className="p-6 sm:p-8 bg-surface-strong/10">
-                    <h2 className="font-display text-xl sm:text-2xl font-semibold tracking-tight text-foreground mb-6">
+                    <h2 className="font-display text-xl sm:text-2xl font-semibold tracking-tight text-foreground mb-6 flex items-center gap-3">
+                      <img src="/nav/payment.svg" alt="" className="w-6 h-6" />
                       Choose Payment
                     </h2>
-                    <div className="grid gap-4 sm:grid-cols-3">
-                      <label
-                        className={`relative flex flex-col items-center justify-center p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
-                          paymentMethod === "cod"
-                            ? "border-accent bg-accent/5"
-                            : "border-line bg-background hover:bg-surface-strong"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="payment"
-                          value="cod"
-                          checked={paymentMethod === "cod"}
-                          onChange={() => setPaymentMethod("cod")}
-                          className="absolute top-4 right-4 accent-accent h-4 w-4"
-                        />
-                        <FiTruck className="text-3xl text-foreground mb-3" />
-                        <span className="font-bold text-sm text-foreground">
-                          Cash on Delivery
-                        </span>
-                      </label>
-
-                      <div className="relative flex flex-col items-center justify-center p-6 rounded-xl border-2 border-line bg-surface-strong opacity-60 select-none cursor-not-allowed">
-                        <div className="absolute inset-0 flex items-center justify-center bg-transparent group">
-                          <FiLock className="text-text-soft/40 text-xl absolute top-4 right-4" />
-                        </div>
-                        <div className="h-8 w-20 bg-line rounded-md mb-3 flex items-center justify-center text-[10px] font-black text-text-soft/60 tracking-tight">
-                          SSLCommerz
-                        </div>
-                        <span className="font-bold text-sm text-text-soft">
-                          Card / Mobile Banking
-                        </span>
-                      </div>
-
-                      <div className="relative flex flex-col items-center justify-center p-6 rounded-xl border-2 border-line bg-surface-strong opacity-60 select-none cursor-not-allowed">
-                        <FiLock className="text-text-soft/40 text-xl absolute top-4 right-4" />
-                        <div className="h-8 w-14 bg-[#E2136E]/10 rounded-md mb-3 flex items-center justify-center font-bold text-[#E2136E]">
-                          bKash
-                        </div>
-                        <span className="font-bold text-sm text-text-soft">
-                          Direct Pay
-                        </span>
-                      </div>
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      {[
+                        {
+                          id: "cod",
+                          label: "Cash on delivery",
+                          icon: "/nav/cod.png",
+                        },
+                        {
+                          id: "bkash",
+                          label: "bkash",
+                          icon: "/nav/bkash.png",
+                          disabled: true,
+                        },
+                        {
+                          id: "visa",
+                          label: "Credit/Debit card",
+                          icon: "/nav/visa.png",
+                          disabled: true,
+                        },
+                      ].map((pm) => (
+                        <label
+                          key={pm.id}
+                          className={`relative flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 ${
+                            pm.disabled
+                              ? "opacity-50 grayscale cursor-not-allowed bg-surface-strong/10 border-line"
+                              : paymentMethod === pm.id
+                                ? "border-accent bg-accent/5 ring-1 ring-accent/20 cursor-pointer"
+                                : "border-line bg-background hover:bg-surface-strong/50 cursor-pointer"
+                          }`}
+                        >
+                          {!pm.disabled && (
+                            <input
+                              type="radio"
+                              name="payment"
+                              value={pm.id}
+                              disabled={pm.disabled}
+                              checked={paymentMethod === pm.id}
+                              onChange={() => setPaymentMethod(pm.id)}
+                              className="absolute top-5 right-3 accent-accent h-3.5 w-3.5 opacity-0 sm:opacity-100"
+                            />
+                          )}
+                          {pm.disabled && (
+                            <FiLock className="absolute top-5 right-3 text-text-soft/40 text-xs" />
+                          )}
+                          <div className="w-8 h-8 shrink-0 flex items-center justify-center">
+                            <img
+                              src={pm.icon}
+                              alt={pm.label}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                          <span
+                            className={`text-[13px] font-bold tracking-tight ${paymentMethod === pm.id && !pm.disabled ? "text-accent" : "text-foreground"}`}
+                          >
+                            {pm.label}
+                          </span>
+                        </label>
+                      ))}
                     </div>
                   </div>
                 </section>
 
                 {/* 3. ADDITIONAL NOTES SECTION */}
                 <section className="bg-surface border border-line/60 rounded-2xl p-6 sm:p-8">
-                  <h2 className="font-display text-lg font-semibold text-foreground mb-4">
+                  <h2 className="font-display text-lg font-semibold text-foreground mb-4 flex items-center gap-3">
+                    <img src="/nav/terms.svg" alt="" className="w-5 h-5 opacity-60" />
                     Additional Notes (Optional)
                   </h2>
                   <textarea
@@ -669,7 +687,8 @@ export default function CheckoutPage() {
               {/* RIGHT SIDEBAR - ORDER SUMMARY */}
               <aside className="space-y-6 lg:sticky lg:top-24 self-start">
                 <div className="bg-surface border border-line/60 rounded-2xl p-6 space-y-6">
-                  <h3 className="font-display text-xl font-bold text-foreground">
+                  <h3 className="font-display text-xl font-bold text-foreground flex items-center gap-3">
+                    <img src="/nav/terms.svg" alt="" className="w-6 h-6" />
                     Order Summary
                   </h3>
 

@@ -95,7 +95,7 @@ export function CategoriesSection() {
   return (
     <section
       id="categories"
-      className="mx-auto w-full max-w-7xl px-0 sm:px-8 lg:px-10 py-6 sm:py-10"
+      className="mx-auto w-full max-w-7xl px-0 sm:px-8 lg:px-10 pt-1 pb-2 sm:py-10"
     >
       <div className="overflow-hidden px-5 sm:px-0 py-4" ref={emblaRef}>
         <motion.div

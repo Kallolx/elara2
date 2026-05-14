@@ -49,6 +49,7 @@ export function ShopPage() {
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get("category");
   const searchParam = searchParams.get("search");
+  const sortParam = searchParams.get("sort") as SortKey | null;
 
   // ── data ──────────────────────────────────────────────────────────────────
   const [products, setProducts] = useState<any[]>([]);
@@ -123,6 +124,12 @@ export function ShopPage() {
       }
     }
   }, [categoryParam, categories]);
+
+  useEffect(() => {
+    if (sortParam) {
+      setSortKey(sortParam);
+    }
+  }, [sortParam]);
 
   // ── fetch products — driven by committed price, not display ───────────────
   const fetchProducts = useCallback(
@@ -567,7 +574,7 @@ export function ShopPage() {
     <section className="w-full pt-8 pb-20">
       <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
         {/* ── Banner ── */}
-        <div className="w-full mb-12 text-center flex flex-col items-center">
+        <div className="w-full mb-4 md:mb-12 text-center flex flex-col items-center">
           <nav className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-text-soft/60 mb-2">
             <Link href="/" className="hover:text-accent transition-colors">
               Home
@@ -580,7 +587,7 @@ export function ShopPage() {
 
           <h1 className="text-3xl md:text-5xl font-serif tracking-tight text-foreground">
             {selectedCategoryId === "All"
-              ? "The Shop"
+              ? "Explore"
               : categories.find((c) => c.id === selectedCategoryId)?.name}
             {selectedSubcategory !== "All" && (
               <span className="text-accent/30 font-light ml-4 select-none">

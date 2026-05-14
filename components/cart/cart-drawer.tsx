@@ -60,7 +60,7 @@ export function CartDrawer() {
         {/* Drawer Header */}
         <header className="flex items-center justify-between px-5 py-4 bg-white">
           <div className="flex items-center gap-2">
-            <FiShoppingBag className="text-text-soft text-base" />
+            <img src="/nav/cart.svg" alt="" className="w-5 h-5 opacity-70" />
             <h2 className="text-lg font-semibold  text-foreground">
               Shopping Bag
             </h2>
@@ -83,7 +83,7 @@ export function CartDrawer() {
           {cartItems.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center text-center py-20 px-6">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-background border border-line text-text-soft mb-4">
-                <FiShoppingBag className="text-2xl" />
+                <img src="/nav/cart.svg" alt="" className="w-8 h-8 opacity-40" />
               </div>
               <p className="text-xs uppercase tracking-widest font-semibold text-text-soft mb-1">
                 Your bag is empty
@@ -175,10 +175,14 @@ export function CartDrawer() {
                       onClick={() =>
                         removeFromCart(item.product.id, item.size.name)
                       }
-                      className="ml-auto flex h-8 w-8 items-center justify-center rounded-full text-text-soft/60 hover:text-red-500 hover:bg-red-50 transition-all"
+                      className="group ml-auto flex h-8 w-8 items-center justify-center rounded-full text-text-soft/60 hover:text-red-500 hover:bg-red-50 transition-all"
                       aria-label="Delete item"
                     >
-                      <FiTrash2 className="text-sm" />
+                      <img
+                        src="/nav/trash.svg"
+                        alt="Delete"
+                        className="w-5 h-5 opacity-40 group-hover:opacity-100 transition-opacity"
+                      />
                     </button>
                   </div>
                 </div>

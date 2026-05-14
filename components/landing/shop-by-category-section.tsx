@@ -101,9 +101,9 @@ export function ShopByCategorySection() {
   if (loading || categories.length === 0) return null;
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-10 pb-10">
+    <section className="mx-auto w-full max-w-7xl px-5 pt-4 pb-10 sm:px-8 lg:px-10">
       <motion.div
-        className="mb-8 flex flex-col sm:flex-row items-center justify-between sm:text-left gap-4"
+        className="mb-3 sm:mb-8 flex flex-col sm:flex-row items-center justify-between sm:text-left gap-4"
         initial={{ opacity: 0, y: 15 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
@@ -139,7 +139,7 @@ export function ShopByCategorySection() {
 
       {/* Category Pills - Full Bleed Row on Mobile */}
       <motion.div
-        className="flex overflow-x-auto hide-scrollbar gap-3 py-2 px-5 -mx-5 mb-6 sm:mx-0 sm:px-1"
+        className="flex overflow-x-auto hide-scrollbar gap-3 py-1 sm:py-2 px-5 -mx-5 mb-2 sm:mb-6 sm:mx-0 sm:px-1"
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
@@ -204,16 +204,6 @@ export function ShopByCategorySection() {
         </button>
       </div>
 
-      {activeCategory && (
-        <div className="mt-8 flex justify-center">
-          <Link
-            href={`/shop?category=${activeCategory}`}
-            className="inline-flex h-12 items-center justify-center rounded-full border border-line px-10 text-sm font-medium text-text transition-all duration-300 hover:bg-text hover:text-background hover:border-text"
-          >
-            View All in Category
-          </Link>
-        </div>
-      )}
     </section>
   );
 }

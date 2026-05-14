@@ -95,18 +95,32 @@ export function ShopByConcernSection() {
   }, [emblaApi, onSelect]);
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-8 lg:px-10">
-      <motion.div
-        className="mb-10 flex flex-col items-center text-center"
-        initial={{ opacity: 0, y: 15 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5 }}
+    <section className="mx-auto w-full max-w-7xl px-5 py-6 sm:px-8 lg:px-10 sm:py-16">
+      <div
+        className="mb-6 flex flex-row items-center justify-between sm:mb-10 sm:justify-center sm:text-center"
       >
-        <h2 className="text-3xl font-serif text-text sm:text-4xl">
+        <h2 className="text-2xl font-serif text-text sm:text-4xl text-left sm:text-center">
           Shop by Concern
         </h2>
-      </motion.div>
+        
+        {/* Mobile Navigation Arrows */}
+        <div className="flex gap-2 sm:hidden">
+          <button
+            onClick={scrollPrev}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-surface text-text active:scale-95 transition-transform"
+            aria-label="Previous"
+          >
+            <FiChevronLeft className="text-lg" />
+          </button>
+          <button
+            onClick={scrollNext}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-surface text-text active:scale-95 transition-transform"
+            aria-label="Next"
+          >
+            <FiChevronRight className="text-lg" />
+          </button>
+        </div>
+      </div>
 
       <div className="group/arrows relative">
         <div className="overflow-hidden" ref={emblaRef}>
@@ -149,8 +163,8 @@ export function ShopByConcernSection() {
         </div>
       </div>
 
-      {/* Bottom Centered Navigation Buttons */}
-      <div className="mt-8 flex justify-center gap-2">
+      {/* Desktop Navigation Buttons */}
+      <div className="mt-8 hidden sm:flex justify-center gap-2">
         <button
           onClick={scrollPrev}
           className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface text-text transition-all duration-300 hover:bg-surface-strong hover:scale-105 cursor-pointer"
