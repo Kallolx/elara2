@@ -72,8 +72,14 @@ export function ShopByConcernSection() {
   const [prevBtnEnabled, setPrevBtnEnabled] = useState(false);
   const [nextBtnEnabled, setNextBtnEnabled] = useState(true);
 
-  const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
-  const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
+  const scrollPrev = useCallback(
+    () => emblaApi && emblaApi.scrollPrev(),
+    [emblaApi],
+  );
+  const scrollNext = useCallback(
+    () => emblaApi && emblaApi.scrollNext(),
+    [emblaApi],
+  );
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
@@ -90,24 +96,26 @@ export function ShopByConcernSection() {
 
   return (
     <section className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-8 lg:px-10">
-      <motion.div 
+      <motion.div
         className="mb-10 flex flex-col items-center text-center"
         initial={{ opacity: 0, y: 15 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
       >
-        <h2 className="text-3xl font-serif text-text sm:text-4xl">Shop by Concern</h2>
+        <h2 className="text-3xl font-serif text-text sm:text-4xl">
+          Shop by Concern
+        </h2>
       </motion.div>
 
       <div className="group/arrows relative">
         <div className="overflow-hidden" ref={emblaRef}>
-          <motion.div 
+          <motion.div
             className="flex -ml-4 touch-pan-y"
             variants={concernContainerVariants}
             initial="hidden"
             whileInView="show"
-            viewport={{ once: true, amount: 0.1 }}
+            viewport={{ once: true, amount: 0 }}
           >
             {concerns.map((concern) => (
               <motion.div
@@ -124,10 +132,10 @@ export function ShopByConcernSection() {
                       sizes="(max-width: 640px) 75vw, (max-width: 768px) 45vw, (max-width: 1024px) 33vw, 25vw"
                       className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
                     />
-                    
+
                     {/* Gradient Overlay for better text readability */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-70 transition-opacity duration-300 group-hover:opacity-85" />
-                    
+
                     <div className="absolute bottom-0 left-0 w-full p-6 text-center">
                       <h3 className="text-xl font-medium text-white leading-tight drop-shadow-sm">
                         {concern.title}
@@ -139,7 +147,6 @@ export function ShopByConcernSection() {
             ))}
           </motion.div>
         </div>
-
       </div>
 
       {/* Bottom Centered Navigation Buttons */}

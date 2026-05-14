@@ -113,7 +113,7 @@ export function ProductsSection() {
       id="shop"
       className="mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-10"
     >
-      <motion.div 
+      <motion.div
         className="mb-6 flex flex-col items-center justify-between sm:flex-row sm:text-left"
         initial={{ opacity: 0, y: 15 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -122,7 +122,11 @@ export function ProductsSection() {
       >
         <div>
           <h2 className="flex items-center gap-3 text-3xl font-serif text-text sm:text-4xl">
-            <img src="/new.png" alt="New" className="h-8 w-8 sm:h-10 sm:w-10 object-contain" />
+            <img
+              src="/new.png"
+              alt="New"
+              className="h-8 w-8 sm:h-10 sm:w-10 object-contain"
+            />
             Recent Arrivals
           </h2>
         </div>
@@ -147,26 +151,19 @@ export function ProductsSection() {
       </motion.div>
 
       {/* Slider Viewport */}
-      <div className="overflow-hidden" ref={emblaRef}>
-        <motion.div 
-          className="flex -ml-4 touch-pan-y"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.1 }}
-        >
+      <div className="overflow-hidden py-4" ref={emblaRef}>
+        <div className="flex -ml-4 touch-pan-y">
           {products.map((product) => (
-            <motion.div
+            <div
               key={product.id || product.slug}
-              variants={itemVariants}
               className="min-w-0 pl-4 flex-[0_0_75%] sm:flex-[0_0_45%] md:flex-[0_0_33.333%] lg:flex-[0_0_25%]"
             >
               <div className="h-full py-2">
                 <ProductCard product={product} />
               </div>
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
       </div>
 
       {/* Mobile Navigation arrows */}

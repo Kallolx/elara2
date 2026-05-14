@@ -73,8 +73,8 @@ const cardContainerVariants = {
   show: {
     opacity: 1,
     transition: {
-      delayChildren: 0.45, 
-      staggerChildren: 0.1, 
+      delayChildren: 0.45,
+      staggerChildren: 0.1,
     },
   },
 };
@@ -169,13 +169,13 @@ export function OffersSection() {
   }
 
   return (
-    <section className="relative mx-auto max-w-7xl px-5 sm:px-8 lg:px-10 py-12">
+    <section className="relative mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
       {/* Master Enclosure with Deep Vibrant Warm Gradient - Cinematic Top-to-Bottom Slide Down */}
       <motion.div
         className="relative w-full rounded-[2.5rem] overflow-hidden bg-gradient-to-br from-[#FCF7F2] via-[#F5DEC8] to-[#E8B48C] border border-[#DFB899]/60 px-6 pt-16 pb-10 sm:px-10 md:pt-20 md:pb-12 shadow-[0_12px_40px_rgba(232,180,140,0.15)]"
-        initial={{ opacity: 0, y: -80 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-80px" }}
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, amount: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
       >
         {/* Visual Accents aligned to primary design spec */}
@@ -195,23 +195,9 @@ export function OffersSection() {
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-foreground tracking-tight mb-2">
             Special Offer
           </h2>
-          <p className="text-sm sm:text-base text-text-soft mb-8 tracking-wide">
+          <p className="text-sm sm:text-base text-text-soft mb-4 sm:mb-8 tracking-wide">
             Pick your products
           </p>
-
-          <div className="mb-14">
-            <ButtonLink
-              href="/shop"
-              size="md"
-              color="primary"
-              className="shadow-md group"
-            >
-              <span className="flex items-center gap-2 font-bold tracking-wide">
-                {dynamicOfferLabel}
-                <FiArrowRight className="text-[15px] group-hover:translate-x-1 transition-transform" />
-              </span>
-            </ButtonLink>
-          </div>
 
           {/* Interactive Viewport Region */}
           <div className="relative w-full px-0 md:px-2">
@@ -220,12 +206,12 @@ export function OffersSection() {
               <div className="relative group/carousel">
                 {/* Embla Frame */}
                 <div className="overflow-hidden w-full" ref={emblaRef}>
-                  <motion.div 
+                  <motion.div
                     className="flex -ml-4 touch-pan-y py-2"
                     variants={cardContainerVariants}
                     initial="hidden"
                     whileInView="show"
-                    viewport={{ once: true, margin: "-40px" }}
+                    viewport={{ once: true, amount: 0 }}
                   >
                     {products.map((product) => (
                       <motion.div
@@ -273,7 +259,8 @@ export function OffersSection() {
                   No Offers Available
                 </h3>
                 <p className="mt-1.5 text-sm text-text-soft leading-normal max-w-[240px]">
-                  Check back later for dynamic season promotions and exclusive skincare bundles!
+                  Check back later for dynamic season promotions and exclusive
+                  skincare bundles!
                 </p>
               </div>
             )}
