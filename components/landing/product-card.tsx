@@ -229,10 +229,10 @@ export function ProductCard({ product }: ProductCardProps) {
       <div className="flex flex-col flex-grow px-3 py-3 sm:px-5 sm:py-5">
         {/* Minimal Review Count Top of Name */}
         <div className="mb-1 font-medium flex items-center">
-          {(product.reviewCount || 0) > 0 ? (
+          {((product as any).reviews?.length || product.reviewCount || 0) > 0 ? (
             <span className="text-[11px] sm:text-sm text-green-600">
-              {product.reviewCount}{" "}
-              {product.reviewCount === 1 ? "Review" : "Reviews"}
+              {(product as any).reviews?.length || product.reviewCount}{" "}
+              {((product as any).reviews?.length || product.reviewCount) === 1 ? "Review" : "Reviews"}
             </span>
           ) : (
             <span className="text-[11px] sm:text-sm text-green-600">0 Reviews</span>

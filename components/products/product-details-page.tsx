@@ -360,6 +360,23 @@ export function ProductDetailsPage({ product }: ProductDetailsPageProps) {
   // Computed granular stock state integrating parent overrides & specific size variations
   const isSizeOutOfStock = product.isOutOfStock || selectedSize.isOutOfStock === true;
 
+  // Dynamic Rating and Review Count Calculation
+  const { calculatedRating, calculatedReviewCount } = useMemo(() => {
+    const reviews = product.reviews || [];
+    if (reviews.length === 0) {
+      // Fallback to legacy fields if reviews array is empty (unlikely with our system but safe)
+      return {
+        calculatedRating: Number(product.rating || 0),
+        calculatedReviewCount: Number(product.reviewCount || 0),
+      };
+    }
+    const sum = reviews.reduce((acc: number, r: any) => acc + (Number(r.rating) || 0), 0);
+    return {
+      calculatedRating: sum / reviews.length,
+      calculatedReviewCount: reviews.length,
+    };
+  }, [product.reviews, product.rating, product.reviewCount]);
+
   return (
     <section className="px-5 py-8 sm:px-8 lg:px-10 lg:py-12">
       <div className="mx-auto w-full max-w-7xl">
@@ -476,10 +493,10 @@ export function ProductDetailsPage({ product }: ProductDetailsPageProps) {
                       fill="currentColor"
                       aria-hidden="true"
                     />
-                    {Number(product.rating || 0).toFixed(1)}
+                    {calculatedRating.toFixed(1)}
                   </div>
                   <span className="text-md font-medium text-text-soft/70">
-                    {product.reviewCount} Reviews
+                    {calculatedReviewCount} Reviews
                   </span>
                 </div>
               </div>
@@ -850,13 +867,13 @@ export function ProductDetailsPage({ product }: ProductDetailsPageProps) {
             <div className="grid gap-12 md:grid-cols-[auto_1fr] md:items-start lg:px-6">
               <div className="flex flex-col items-center md:items-start justify-center pr-0 md:pr-12 md:min-w-[160px]">
                 <span className="text-[52px] font-medium text-foreground leading-none mb-3 font-sans">
-                  {Number(product.rating || 0).toFixed(1)}
+                  {calculatedRating.toFixed(1)}
                 </span>
                 <div className="flex items-center gap-[3px]">
                   {[1, 2, 3, 4, 5].map((s) => (
                     <FiStar
                       key={s}
-                      className={`text-[17px] ${s <= Math.round(product.rating || 0) ? "fill-orange-500 text-orange-500" : "text-line fill-none"}`}
+                      className={`text-[17px] ${s <= Math.round(calculatedRating) ? "fill-orange-500 text-orange-500" : "text-line fill-none"}`}
                     />
                   ))}
                 </div>
